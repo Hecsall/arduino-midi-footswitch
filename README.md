@@ -15,7 +15,7 @@ I will update this readme as soon as possible, for now i'm writing some basic th
 
   [![SparkFun Pro Micro](https://i.imgur.com/tws3UZOm.jpg)](https://i.imgur.com/tws3UZO.jpg)
 
-- [10 Kohm resistors](https://www.amazon.com/uxcell-10KOhm-Resistors-Tolerances-100Pcs/dp/B07LGK9153/ref=sr_1_5?keywords=10kohm+resistor+0.5w&qid=1564134058&s=gateway&sr=8-5), depending on which LEDs you use (mine were blue)
+- [10 Kohm 1/2W resistors](https://www.amazon.com/uxcell-10KOhm-Resistors-Tolerances-100Pcs/dp/B07LGK9153/ref=sr_1_5?keywords=10kohm+resistor+0.5w&qid=1564134058&s=gateway&sr=8-5), depending on which LEDs you use (mine were blue)
 
   ![10 Kohm resistor](https://i.imgur.com/XF687wEm.jpg)
 
@@ -35,7 +35,15 @@ I will update this readme as soon as possible, for now i'm writing some basic th
 
 
 ## Hardware setup:
-To do...
+Going straight to the point, this footswitch will have:
+- 5 push buttons
+- 5 leds (one for each button), each one with a 10 Kohm 1/2W resistor
+- 1 Switch on the back, to select 3 different button "Layers" (like what the "Shift" key on your PC keyboard does, more or less)
+
+Here is how i wired everything up on my SparkFun Pro Micro (click to open the larger image), if you use something different just remember to adjust pin numbers in the code later. (Black is GND, every other colors are Data pins)
+
+[![Arduino MIDI Footswitch Wiring](https://i.imgur.com/1ezxqnMm.png)](https://i.imgur.com/1ezxqnM.png)
+
 
 
 ## Software setup:
