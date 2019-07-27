@@ -22,28 +22,28 @@ USB MIDI Pedal built with Arduino.
   <img 
     src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/sparkfun_pro_micro.jpg"
     alt="SparkFun Pro Micro"
-    style="max-width: 300px;">
+    width="300">
 
 - [10 KΩ 1/2W resistors](https://www.amazon.com/uxcell-10KOhm-Resistors-Tolerances-100Pcs/dp/B07LGK9153/ref=sr_1_5?keywords=10kohm+resistor+0.5w&qid=1564134058&s=gateway&sr=8-5), depending on which LEDs you use (mine were blue)
 
   <img 
     src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/10kohm_resistor.jpg"
     alt="10 KΩ resistor"
-    style="max-width: 300px;">
+    width="300">
 
 - [Push buttons](https://www.amazon.com/Etopars-Guitar-Effects-Momentary-Button/dp/B076V2QYSJ/ref=sr_1_18?keywords=push+button+pedal&qid=1564133684&s=gateway&sr=8-18)
   
   <img 
     src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/push_button.jpg"
     alt="Push Button"
-    style="max-width: 300px;">
+    width="300">
 
 - [Switch ON-OFF-ON](https://www.amazon.com/SALECOM-Position-Guitar-Toggle-Switches/dp/B01JDUBBJQ/ref=sr_1_35?keywords=switch+on+off+on&qid=1564133908&s=gateway&sr=8-35)
 
   <img 
     src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/switch_on_off_on.jpg"
     alt="Switch ON-OFF-ON"
-    style="max-width: 300px;">
+    width="300">
   
 - [LEDs](https://www.amazon.com/Lights-Emitting-Assortment-Arduino-300-Pack/dp/B00UWBJM0Q/ref=sr_1_7?keywords=blue+led&qid=1564134346&s=gateway&sr=8-7) - *optional*
 
@@ -52,7 +52,7 @@ USB MIDI Pedal built with Arduino.
   <img 
     src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/aluminium_box.jpg"
     alt="Aluminium Box"
-    style="max-width: 300px;">
+    width="300">
 
 
 
