@@ -146,6 +146,7 @@ Now change every "left side" occurrence of your board name with something else (
 After doing this, restart your Arduino IDE and under Tools > Boards you should find your newly created board with the name you have set.
 
 
+
 ## Useful links:
 - SparkFun Pro Micro setup for Arduino IDE: https://learn.sparkfun.com/tutorials/pro-micro--fio-v3-hookup-guide/installing-windows#windows_boardaddon
 - MIDIUSB Arduino library: https://www.arduino.cc/en/Reference/MIDIUSB
