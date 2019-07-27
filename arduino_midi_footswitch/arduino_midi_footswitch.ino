@@ -15,7 +15,7 @@ int  button_pins[5] = {2, 3, 4, 5, 6}; // Arduino pins where buttons are connect
 Layer Switch
 This switch is used to select the button layer to use
 */
-int  layer_switch[2] = {8, 9}; // Arduino pins where the switch is connected
+int  layer_switch_pins[2] = {8, 9}; // Arduino pins where the switch is connected
 bool layer_switch_states[2] = {false, false};
 int current_layer = 0;
 
@@ -93,8 +93,8 @@ int button_layers_states[3][5] = {
 LEDs
 One for each button
 */
-int  leds[5] = {10, 16, 14, 15, 18}; // Arduino pins
-bool leds_states[5] = {false, false, false, false, false};
+int  led_pins[5] = {10, 16, 14, 15, 18}; // Arduino pins
+bool led_states[5] = {false, false, false, false, false};
 
 
 int ppqn = 0; // "Pulse Per Quarter Note"
@@ -146,11 +146,11 @@ void setup() {
   }
   // LED Pins
   for (uint8_t i=0; i < 5; i++) {
-    pinMode(leds[i], OUTPUT);
+    pinMode(led_pins[i], OUTPUT);
   }
   // Switch Pins
   for (uint8_t i=0; i < 2; i++) {
-    pinMode(layer_switch[i], INPUT_PULLUP);
+    pinMode(layer_switch_pins[i], INPUT_PULLUP);
   }
 }
 
@@ -178,13 +178,13 @@ void loop() {
 
 
   // Set which Layer we are using
-  if (digitalRead(layer_switch[0]) == LOW && digitalRead(layer_switch[1]) == HIGH && current_layer != 0) {
+  if (digitalRead(layer_switch_pins[0]) == LOW && digitalRead(layer_switch_pins[1]) == HIGH && current_layer != 0) {
     current_layer = 0;
   }
-  else if (digitalRead(layer_switch[0]) == HIGH && digitalRead(layer_switch[1]) == HIGH && current_layer != 1) {
+  else if (digitalRead(layer_switch_pins[0]) == HIGH && digitalRead(layer_switch_pins[1]) == HIGH && current_layer != 1) {
     current_layer = 1;
   }
-  else if (digitalRead(layer_switch[0]) == HIGH && digitalRead(layer_switch[1]) == LOW && current_layer != 2) {
+  else if (digitalRead(layer_switch_pins[0]) == HIGH && digitalRead(layer_switch_pins[1]) == LOW && current_layer != 2) {
     current_layer = 2;
   }
 
@@ -195,16 +195,16 @@ void loop() {
       controlChange(0, button_layers[current_layer][i], 127);
       MidiUSB.flush();
       button_layers_states[current_layer][i] = true;
-      digitalWrite(leds[i], HIGH); // Turn the LED on
-      leds_states[i] = true;
+      digitalWrite(led_pins[i], HIGH); // Turn the LED on
+      led_states[i] = true;
       delay(15);
     }
     else if (digitalRead(button_pins[i]) == HIGH && button_layers_states[current_layer][i] == true) {
       controlChange(0, button_layers[current_layer][i], 0);
       MidiUSB.flush();
       button_layers_states[current_layer][i] = false;
-      digitalWrite(leds[i], LOW); // Turn the LED off
-      leds_states[i] = false;
+      digitalWrite(led_pins[i], LOW); // Turn the LED off
+      led_states[i] = false;
       delay(15);
     }
   }
