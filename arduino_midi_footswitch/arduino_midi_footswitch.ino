@@ -8,14 +8,14 @@ by Hecsall (https://github.com/Hecsall)
 
 
 // Buttons setup
-byte button_pins[5] = {2, 3, 4, 5, 6}; // Arduino pins where buttons are connected
+const byte button_pins[5] = {2, 3, 4, 5, 6}; // Arduino pins where buttons are connected
 
 
 /*
 Layer Switch
 This switch is used to select the button layer to use
 */
-byte layer_switch_pins[2] = {8, 9}; // Arduino pins where the switch is connected
+const byte layer_switch_pins[2] = {8, 9}; // Arduino pins where the switch is connected
 bool layer_switch_states[2] = {false, false};
 byte current_layer = 0;
 
@@ -23,7 +23,7 @@ byte current_layer = 0;
 // CC values are the numbers in the decimal column of this table
 // https://www.midi.org/specifications-old/item/table-3-control-change-messages-data-bytes-2
 
-int button_layers[3][5] = { 
+const int button_layers[3][5] = { 
   /*
   Layer 0
   (Switch Up)
@@ -93,7 +93,7 @@ int button_layers_states[3][5] = {
 LEDs
 One for each button
 */
-byte led_pins[5] = {10, 16, 14, 15, 18}; // Arduino pins
+const byte led_pins[5] = {10, 16, 14, 15, 18}; // Arduino pins
 bool led_states[5] = {false, false, false, false, false};
 
 
