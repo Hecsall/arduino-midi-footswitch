@@ -1,13 +1,13 @@
 # Arduino MIDI Footswitch
 USB MIDI Pedal built with Arduino.
 
-```
-Disclaimer:
-Please note, i'm not a C developer, so if the code looks ugly/poorly optimized you know why.
-Everything i made was possible thanks to many info on the web, documentation and trial and error.
-I'm not planning to actively support this project, i just thought it could be useful to have a small guide on how i made this, since i didn't found anything really straightforward at that point of time.
-Hope this could come in handy for someone.
-```
+
+>Disclaimer:
+>Please note, i'm not a C developer, so if the code looks ugly/poorly optimized you know why.
+>Everything i made was possible thanks to many info on the web, documentation and trial and error.
+>I'm not planning to actively support this project, i just thought it could be useful to have a small guide on how i made this, since i didn't found anything really straightforward at that point of time.
+>Hope this could come in handy for someone.
+
 
 ## Sections:
 1. [Materials](#materials)
