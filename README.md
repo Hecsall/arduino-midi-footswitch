@@ -9,6 +9,7 @@ USB MIDI Pedal built with Arduino.
 >Hope this could come in handy for someone.
 
 
+
 ## Sections:
 1. [Materials](#materials)
 2. [Hardware setup](#hardware-setup)
@@ -19,40 +20,40 @@ USB MIDI Pedal built with Arduino.
 ## Materials:
 - SparkFun Pro Micro 16MHz (or another similar Arduino)
 
-  <img 
-    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/sparkfun_pro_micro.jpg"
-    alt="SparkFun Pro Micro"
-    width="300">
+    <img 
+        src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/sparkfun_pro_micro.jpg"
+        alt="SparkFun Pro Micro"
+        width="300">
 
 - [10 KΩ 1/2W resistors](https://www.amazon.com/uxcell-10KOhm-Resistors-Tolerances-100Pcs/dp/B07LGK9153/ref=sr_1_5?keywords=10kohm+resistor+0.5w&qid=1564134058&s=gateway&sr=8-5), depending on which LEDs you use (mine were blue)
 
-  <img 
-    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/10kohm_resistor.jpg"
-    alt="10 KΩ resistor"
-    width="300">
+    <img 
+        src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/10kohm_resistor.jpg"
+        alt="10 KΩ resistor"
+        width="300">
 
 - [Push buttons](https://www.amazon.com/Etopars-Guitar-Effects-Momentary-Button/dp/B076V2QYSJ/ref=sr_1_18?keywords=push+button+pedal&qid=1564133684&s=gateway&sr=8-18)
   
-  <img 
-    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/push_button.jpg"
-    alt="Push Button"
-    width="300">
+    <img 
+        src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/push_button.jpg"
+        alt="Push Button"
+        width="300">
 
 - [Switch ON-OFF-ON](https://www.amazon.com/SALECOM-Position-Guitar-Toggle-Switches/dp/B01JDUBBJQ/ref=sr_1_35?keywords=switch+on+off+on&qid=1564133908&s=gateway&sr=8-35)
 
-  <img 
-    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/switch_on_off_on.jpg"
-    alt="Switch ON-OFF-ON"
-    width="300">
+    <img 
+        src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/switch_on_off_on.jpg"
+        alt="Switch ON-OFF-ON"
+        width="300">
   
 - [LEDs](https://www.amazon.com/Lights-Emitting-Assortment-Arduino-300-Pack/dp/B00UWBJM0Q/ref=sr_1_7?keywords=blue+led&qid=1564134346&s=gateway&sr=8-7) - *optional*
 
 - Something to use as a Case, i used an [Aluminium Box](https://www.amazon.com/s?k=aluminium+stompbox&ref=nb_sb_noss)
 
-  <img 
-    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/aluminium_box.jpg"
-    alt="Aluminium Box"
-    width="300">
+    <img 
+        src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/aluminium_box.jpg"
+        alt="Aluminium Box"
+        width="300">
 
 
 
@@ -64,20 +65,42 @@ Going straight to the point, this footswitch will have:
 
 Here is how i wired everything up on my SparkFun Pro Micro (click to open the larger image), if you use something different just remember to adjust pin numbers in the code later. (Black is GND, every other colors are Data pins)
 
-[![Arduino MIDI Footswitch Wiring](https://i.imgur.com/1ezxqnMm.png)](https://i.imgur.com/1ezxqnM.png)
+[<img 
+    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/wiring_scheme.png"
+    alt="Arduino MIDI Footswitch Wiring"
+    width="300">](https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/wiring_scheme.png)
 
 First i soldered everything in place, i used a small breadboard and some male plugs just to make everything cleaner and detachable, but you can solder directly on the SparkFun if you want.
 
-[![Soldered SparkFun](https://i.imgur.com/bsws77xm.jpg)](https://i.imgur.com/bsws77x.jpg)
+[<img 
+    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/photos/IMG_20181005_231610.jpg"
+    alt="Soldered SparkFun"
+    width="300">](https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/photos/IMG_20181005_231610.jpg)
 
 Then i put everything in an Aluminium Box with some holes for Buttons, LEDs, the switch and the USB port of the SparkFun.
 
-![Aluminium Box](https://i.imgur.com/HdCAXwlm.jpg)
+<img 
+    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/photos/IMG_20181005_192354.jpg"
+    alt="Aluminium Box"
+    width="300">
 
 Fix the SparkFun to the enclosure (screws, hot glue, or both lol), connect some wires and you are done with the hardware part!
 
-[![Wires](https://i.imgur.com/UuAzZ0pm.jpg)](https://i.imgur.com/UuAzZ0p.jpg)
-[![Aluminium Box with buttons](https://i.imgur.com/BC8NdJsm.jpg)](https://i.imgur.com/BC8NdJs.jpg)
+<img 
+    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/photos/IMG_20181007_170214.jpg"
+    alt="Wires"
+    width="300">
+
+<img 
+    src="https://raw.githubusercontent.com/Hecsall/arduino-midi-footswitch/readme-assets/img/photos/IMG_20181006_005124.jpg"
+    alt="Aluminium Box with buttons"
+    width="300">
+
+<img 
+    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/photos/IMG_20181006_005138.jpg"
+    alt="Aluminium Box with buttons - back"
+    width="300">
+
 
 
 
@@ -97,8 +120,12 @@ Now select the proper port and we can upload the code!
 
 If everything is correct, it should be working. When you push a button the relative led should light up. For testing the midi messages i used a lightweight free software called [Midi Tools](https://mountainutilities.eu/miditools), or you can directly use your DAW.
 
-![Arduino Footswitch](https://i.imgur.com/CxibkpCm.jpg)
+<img 
+    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/photos/IMG_20181009_235056.jpg"
+    alt="Arduino Footswitch"
+    width="300">
 
+    
 
 ## Useful links:
 - SparkFun Pro Micro setup for Arduino IDE: https://learn.sparkfun.com/tutorials/pro-micro--fio-v3-hookup-guide/installing-windows#windows_boardaddon
