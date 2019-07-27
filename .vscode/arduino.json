@@ -1,5 +1,5 @@
 {
-    "board": "SparkFun:avr:promicro",
+    "board": "SparkFun:avr:footswitch",
     "port": "COM3",
     "sketch": "arduino_midi_footswitch/arduino_midi_footswitch.ino",
     "programmer": "AVRISP mkII",

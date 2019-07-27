@@ -8,16 +8,16 @@ by Hecsall (https://github.com/Hecsall)
 
 
 // Buttons setup
-int  button_pins[5] = {2, 3, 4, 5, 6}; // Arduino pins where buttons are connected
+byte button_pins[5] = {2, 3, 4, 5, 6}; // Arduino pins where buttons are connected
 
 
 /*
 Layer Switch
 This switch is used to select the button layer to use
 */
-int  layer_switch_pins[2] = {8, 9}; // Arduino pins where the switch is connected
+byte layer_switch_pins[2] = {8, 9}; // Arduino pins where the switch is connected
 bool layer_switch_states[2] = {false, false};
-int current_layer = 0;
+byte current_layer = 0;
 
 
 // CC values are the numbers in the decimal column of this table
@@ -93,11 +93,11 @@ int button_layers_states[3][5] = {
 LEDs
 One for each button
 */
-int  led_pins[5] = {10, 16, 14, 15, 18}; // Arduino pins
+byte led_pins[5] = {10, 16, 14, 15, 18}; // Arduino pins
 bool led_states[5] = {false, false, false, false, false};
 
 
-int ppqn = 0; // "Pulse Per Quarter Note"
+byte ppqn = 0; // "Pulse Per Quarter Note"
 
 
 /*

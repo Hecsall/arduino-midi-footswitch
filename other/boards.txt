@@ -1,0 +1,55 @@
+
+
+# Add this to your SparkFuns's board.txt
+
+
+################################################################################
+################################## FootSwitch ##################################
+################################################################################
+footswitch.name=FootSwitch
+
+footswitch.upload.tool=avrdude
+footswitch.upload.protocol=avr109
+footswitch.upload.maximum_size=28672
+footswitch.upload.maximum_data_size=2560
+footswitch.upload.speed=57600
+footswitch.upload.disable_flushing=true
+footswitch.upload.use_1200bps_touch=true
+footswitch.upload.wait_for_upload_port=true
+
+footswitch.bootloader.tool=avrdude
+footswitch.bootloader.unlock_bits=0x3F
+footswitch.bootloader.lock_bits=0x2F
+footswitch.bootloader.low_fuses=0xFF
+footswitch.bootloader.high_fuses=0xD8
+
+footswitch.build.board=AVR_PROMICRO
+footswitch.build.core=arduino:arduino
+footswitch.build.variant=promicro
+footswitch.build.mcu=atmega32u4
+footswitch.build.usb_product="FootSwitch"
+footswitch.build.vid=0x1b4f
+footswitch.build.extra_flags={build.usb_flags}
+
+######################### Pro Micro 3.3V / 8MHz ################################
+footswitch.menu.cpu.8MHzatmega32U4=ATmega32U4 (3.3V, 8 MHz)
+
+footswitch.menu.cpu.8MHzatmega32U4.build.pid.0=0x6663
+footswitch.menu.cpu.8MHzatmega32U4.build.pid.1=0x6664
+footswitch.menu.cpu.8MHzatmega32U4.build.pid=0x6664
+footswitch.menu.cpu.8MHzatmega32U4.build.f_cpu=8000000L
+
+footswitch.menu.cpu.8MHzatmega32U4.bootloader.extended_fuses=0xFE
+footswitch.menu.cpu.8MHzatmega32U4.bootloader.file=caterina/Caterina-promicro8.hex
+
+
+############################# Pro Micro 5V / 16MHz #############################
+footswitch.menu.cpu.16MHzatmega32U4=ATmega32U4 (5V, 16 MHz)
+
+footswitch.menu.cpu.16MHzatmega32U4.build.pid.0=0x6665
+footswitch.menu.cpu.16MHzatmega32U4.build.pid.1=0x6666
+footswitch.menu.cpu.16MHzatmega32U4.build.pid=0x6666
+footswitch.menu.cpu.16MHzatmega32U4.build.f_cpu=16000000L
+
+footswitch.menu.cpu.16MHzatmega32U4.bootloader.extended_fuses=0xCB
+footswitch.menu.cpu.16MHzatmega32U4.bootloader.file=caterina/Caterina-promicro16.hex
