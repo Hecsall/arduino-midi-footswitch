@@ -1,2 +1,0 @@
-name=Arduino AVR Boards (MIDI version)
-version=1.0.0
