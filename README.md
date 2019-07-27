@@ -19,7 +19,10 @@ USB MIDI Pedal built with Arduino.
 ## Materials:
 - SparkFun Pro Micro 16MHz (or another similar Arduino)
 
-  ![SparkFun Pro Micro](https://i.imgur.com/tws3UZOm.jpg)
+  <img 
+    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/sparkfun_pro_micro.jpg"
+    alt="SparkFun Pro Micro"
+    style="max-width: 300px;">
 
 - [10 Kohm 1/2W resistors](https://www.amazon.com/uxcell-10KOhm-Resistors-Tolerances-100Pcs/dp/B07LGK9153/ref=sr_1_5?keywords=10kohm+resistor+0.5w&qid=1564134058&s=gateway&sr=8-5), depending on which LEDs you use (mine were blue)
 
