@@ -76,7 +76,7 @@ you will have to install the board in your Arduino IDE, to do so, follow this li
 https://learn.sparkfun.com/tutorials/pro-micro--fio-v3-hookup-guide/installing-windows#windows_boardaddon
 
 Ok, now we are ready to upload your code, finally.<br>
-Open the arduino_midi_footswitch.ino file, and if you made changes on pin wiring, be sure to edit the **button_pins**, **leds** or **layer_switch** variables according to your wiring.<br>
+Open the arduino_midi_footswitch.ino file, and if you made changes on pin wiring, be sure to edit the **button_pins**, **led_pins** or **layer_switch_pins** variables according to your wiring.<br>
 Plug the USB cable from your Arduino/SparkFun to your PC, under Tools select the proper board and, if needed, select the proper CPU (SparkFun Pro Micro comes in 2 versions, 8MHz and 16Mhz, flashing the wrong one will cause the board to "soft brick", and you will need to reset it manually, *learned this the hard way*).<br>
 Now select the proper port and we can upload the code!
 
