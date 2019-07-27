@@ -65,17 +65,17 @@ Going straight to the point, this footswitch will have:
 
 Here is how i wired everything up on my SparkFun Pro Micro (click to open the larger image), if you use something different just remember to adjust pin numbers in the code later. (Black is GND, every other colors are Data pins)
 
-[<img 
+<img 
     src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/wiring_scheme.png"
     alt="Arduino MIDI Footswitch Wiring"
-    width="300">](https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/wiring_scheme.png)
+    width="300">
 
 First i soldered everything in place, i used a small breadboard and some male plugs just to make everything cleaner and detachable, but you can solder directly on the SparkFun if you want.
 
-[<img 
+<img 
     src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/photos/IMG_20181005_231610.jpg"
     alt="Soldered SparkFun"
-    width="300">](https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/photos/IMG_20181005_231610.jpg)
+    width="300">
 
 Then i put everything in an Aluminium Box with some holes for Buttons, LEDs, the switch and the USB port of the SparkFun.
 
@@ -125,7 +125,7 @@ If everything is correct, it should be working. When you push a button the relat
     alt="Arduino Footswitch"
     width="300">
 
-    
+
 
 ## Useful links:
 - SparkFun Pro Micro setup for Arduino IDE: https://learn.sparkfun.com/tutorials/pro-micro--fio-v3-hookup-guide/installing-windows#windows_boardaddon
