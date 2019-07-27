@@ -127,6 +127,22 @@ If everything is correct, it should be working. When you push a button the relat
 
 
 
+## Rename the device:
+This is an optional step. Normally, when you plug your footswitch, it will appear as "SparkFun Pro Micro" (or the name of the board you are using), and it triggers my OCD, so i decided to rename it.
+It's a very simple and fast step. Go to<br>
+```C:\Program Files (x86)\Arduino\hardware\arduino\avr```<br>
+(in my case ```C:\Users\<username>\AppData\Local\Arduino15\packages\SparkFun\hardware\avr\1.1.12``` because i'm using a SparkFun board and not an Arduino)<br>
+and open the boards.txt file. Here search for your board name (i.e "pro micro") and you should find the definition of your board.
+
+
+Copy the entire definition block of code (including eventual 8/16 MHz definitions) and paste it at the end of the file. Now change every "left side" occurrence of your board name with something else (see image below, click to open the large version). On the "right side" change only the board names and PID (the PID should be a different number from other boards)
+
+<img 
+    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/photos/IMG_20181009_235056.jpg"
+    alt="boards.txt"
+    width="300">
+
+
 ## Useful links:
 - SparkFun Pro Micro setup for Arduino IDE: https://learn.sparkfun.com/tutorials/pro-micro--fio-v3-hookup-guide/installing-windows#windows_boardaddon
 - MIDIUSB Arduino library: https://www.arduino.cc/en/Reference/MIDIUSB
