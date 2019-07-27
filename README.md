@@ -24,30 +24,42 @@ USB MIDI Pedal built with Arduino.
     alt="SparkFun Pro Micro"
     style="max-width: 300px;">
 
-- [10 Kohm 1/2W resistors](https://www.amazon.com/uxcell-10KOhm-Resistors-Tolerances-100Pcs/dp/B07LGK9153/ref=sr_1_5?keywords=10kohm+resistor+0.5w&qid=1564134058&s=gateway&sr=8-5), depending on which LEDs you use (mine were blue)
+- [10 KΩ 1/2W resistors](https://www.amazon.com/uxcell-10KOhm-Resistors-Tolerances-100Pcs/dp/B07LGK9153/ref=sr_1_5?keywords=10kohm+resistor+0.5w&qid=1564134058&s=gateway&sr=8-5), depending on which LEDs you use (mine were blue)
 
-  ![10 Kohm resistor](https://i.imgur.com/XF687wEm.jpg)
+  <img 
+    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/10kohm_resistor.jpg"
+    alt="10 KΩ resistor"
+    style="max-width: 300px;">
 
 - [Push buttons](https://www.amazon.com/Etopars-Guitar-Effects-Momentary-Button/dp/B076V2QYSJ/ref=sr_1_18?keywords=push+button+pedal&qid=1564133684&s=gateway&sr=8-18)
   
-  ![Push Button](https://i.imgur.com/ZlDxFZMm.jpg)
+  <img 
+    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/push_button.jpg"
+    alt="Push Button"
+    style="max-width: 300px;">
 
 - [Switch ON-OFF-ON](https://www.amazon.com/SALECOM-Position-Guitar-Toggle-Switches/dp/B01JDUBBJQ/ref=sr_1_35?keywords=switch+on+off+on&qid=1564133908&s=gateway&sr=8-35)
 
-  ![Switch ON-OFF-ON](https://i.imgur.com/3DO6V0fm.jpg)
+  <img 
+    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/switch_on_off_on.jpg"
+    alt="Switch ON-OFF-ON"
+    style="max-width: 300px;">
   
-- [LEDs](https://www.amazon.com/Lights-Emitting-Assortment-Arduino-300-Pack/dp/B00UWBJM0Q/ref=sr_1_7?keywords=blue+led&qid=1564134346&s=gateway&sr=8-7)
+- [LEDs](https://www.amazon.com/Lights-Emitting-Assortment-Arduino-300-Pack/dp/B00UWBJM0Q/ref=sr_1_7?keywords=blue+led&qid=1564134346&s=gateway&sr=8-7) - *optional*
 
 - Something to use as a Case, i used an [Aluminium Box](https://www.amazon.com/s?k=aluminium+stompbox&ref=nb_sb_noss)
 
-  ![Aluminium Box](https://i.imgur.com/KTMlPKjm.jpg)
+  <img 
+    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/aluminium_box.jpg"
+    alt="Aluminium Box"
+    style="max-width: 300px;">
 
 
 
 ## Hardware setup:
 Going straight to the point, this footswitch will have:
 - 5 push buttons
-- 5 leds (one for each button), each one with a 10 Kohm 1/2W resistor
+- 5 leds (one for each button), each one with a 10 KΩ 1/2W resistor
 - 1 Switch on the back, to select 3 different button "Layers" (like what the "Shift" key on your PC keyboard does, more or less)
 
 Here is how i wired everything up on my SparkFun Pro Micro (click to open the larger image), if you use something different just remember to adjust pin numbers in the code later. (Black is GND, every other colors are Data pins)
