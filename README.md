@@ -135,12 +135,15 @@ It's a very simple and fast step. Go to<br>
 and open the boards.txt file. Here search for your board name (i.e "pro micro") and you should find the definition of your board.
 
 
-Copy the entire definition block of code (including eventual 8/16 MHz definitions) and paste it at the end of the file. Now change every "left side" occurrence of your board name with something else (see image below, click to open the large version). On the "right side" change only the board names and PID (the PID should be a different number from other boards)
+Copy the entire definition block of code (including eventual 8/16 MHz definitions) and paste it at the end of the file.<br> 
+Now change every "left side" occurrence of your board name with something else (see image below, click to open the large version).<br> On the "right side" change only the board names and PID (the PID should be a different number from other boards), my suggestion is to take the original number, for example "0x9203", and edit the first 3 numbers after the "0x", something like "0x6663" so you keep the last number consistent.
 
 <img 
-    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/photos/IMG_20181009_235056.jpg"
+    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/boards_txt.jpg"
     alt="boards.txt"
     width="300">
+
+After doing this, restart your Arduino IDE and under Tools > Boards you should find your newly created board with the name you have set.
 
 
 ## Useful links:
