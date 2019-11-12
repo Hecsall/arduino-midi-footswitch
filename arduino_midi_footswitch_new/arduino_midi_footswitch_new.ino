@@ -86,43 +86,74 @@ void handlePushButton(byte i)
 // Button in "Toggle" mode
 void handleToggleButton(byte i)
 {
-    if (digitalRead(button_pins[i]) == LOW && button_states[i] == false)
-    {
-        controlChange(0, button_layers[current_layer][i], 127);
-        MidiUSB.flush();
-        button_states[i] = true;
-        digitalWrite(led_pins[i], HIGH); // Turn the LED on
-        led_states[i] = true;
-        delay(15);
+    buttonState = digitalRead(button_pins[i]);
+    if (buttonState != lastButtonState){
+        if (buttonState == LOW && button_states[i] == false)
+        {
+            controlChange(0, button_layers[current_layer][i], 127);
+            MidiUSB.flush();
+            button_states[i] = true;
+            digitalWrite(led_pins[i], HIGH); // Turn the LED on
+            led_states[i] = true;
+        }
+        else if (buttonState == LOW && button_states[i] == true)
+        {
+            controlChange(0, button_layers[current_layer][i], 0);
+            MidiUSB.flush();
+            button_states[i] = false;
+            digitalWrite(led_pins[i], LOW); // Turn the LED off
+            led_states[i] = false;
+        }
+        delay(100);
     }
-    else if (digitalRead(button_pins[i]) == LOW && button_states[i] == true)
-    {
-        controlChange(0, button_layers[current_layer][i], 0);
-        MidiUSB.flush();
-        button_states[i] = false;
-        digitalWrite(led_pins[i], LOW); // Turn the LED off
-        led_states[i] = false;
-        delay(15);
-    }
+    lastButtonState = buttonState;
 }
 
 // Button "Change" mode
 void handleChangeMode(byte i)
 {
-    // Note: only layer 1 (switch OFF) can be customized
-    if (digitalRead(button_pins[i]) == LOW && button_modes[1][i] == 0)
-    {
-        button_modes[1][i] = 1;
-        digitalWrite(led_pins[i], HIGH); // Turn the LED on
-        led_states[i] = true;
-        delay(100);
+    buttonState = digitalRead(button_pins[i]);
+    if (buttonState != lastButtonState){
+        // Note: only layer 1 (switch OFF) can be customized
+        if (buttonState == LOW && button_modes[1][i] == 0 && millis() - time > debounce)
+        {
+            button_modes[1][i] = 1;
+            digitalWrite(led_pins[i], HIGH); // Turn the LED on
+            led_states[i] = true;
+            time = millis();
+        }
+        else if (buttonState == LOW && button_modes[1][i] == 1 && millis() - time > debounce)
+        {
+            button_modes[1][i] = 0;
+            digitalWrite(led_pins[i], LOW); // Turn the LED off
+            led_states[i] = false;
+            time = millis();
+        }
+        delay(50);
     }
-    else if (digitalRead(button_pins[i]) == LOW && button_modes[1][i] == 1)
+    lastButtonState = buttonState;
+}
+
+// Turn off all LEDs
+void poweroffLeds()
+{
+    for (uint8_t i = 0; i < 5; i++)
     {
-        button_modes[1][i] = 0;
-        digitalWrite(led_pins[i], LOW); // Turn the LED off
+        digitalWrite(led_pins[i], LOW);
         led_states[i] = false;
-        delay(100);
+    }
+}
+
+// Turn on all the current mode LEDs
+void showModeLeds()
+{
+    for (uint8_t i = 0; i < 5; i++)
+    {
+        if (button_modes[1][i] == 1)
+        {
+            digitalWrite(led_pins[i], HIGH);
+            led_states[i] = true;
+        }
     }
 }
 
@@ -169,7 +200,6 @@ void setup()
 void loop()
 {
     initBPM(); // Blinking BPM LED - needs to be enabled in your DAW
-
     setLayer(); // Set which Layer we are using
 
     // Button operations based on current_layer
@@ -177,6 +207,7 @@ void loop()
     {
         if (current_layer < 2) // Only layers 0 and 1 are normal operational layers
         {
+            poweroffLeds();
             if (button_modes[current_layer][i] == 0)
             {
                 handlePushButton(i);
@@ -188,6 +219,7 @@ void loop()
         }
         else if (current_layer == 2) // Layer 2 is the "settings" layer
         {
+            showModeLeds();
             handleChangeMode(i);
         }
     }

@@ -45,8 +45,14 @@ byte button_modes[2][5] = {
     {0, 0, 0, 0, 0}
 };
 
+int buttonState = 0; 
+int lastButtonState = 0; 
+
 // Button states: true = button ON, false = button OFF
 int button_states[5] = {false, false, false, false, false};
+
+long time = 0;         // the last time the output pin was toggled
+long debounce = 200;   // the debounce time, increase if the output flickers
 
 // LED states
 bool led_states[5] = {false, false, false, false, false};
