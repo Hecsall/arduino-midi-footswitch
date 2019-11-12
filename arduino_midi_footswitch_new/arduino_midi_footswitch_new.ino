@@ -3,91 +3,11 @@ Arduino USB MIDI FootSwitch
 by Hecsall (https://github.com/Hecsall)
 */
 
-/*
-
-Button modes:
-0, false: button is a push button
-1, true: button is a toggle button
-
-*/
-
 // https://www.arduino.cc/en/Reference/MIDIUSB
 #include "MIDIUSB.h"
+#include "variables.h"
 
-// Arduino Pins
-const byte button_pins[5] = {2, 3, 4, 5, 6};   // Pins where buttons are connected
-const byte switch_pins[2] = {8, 9};            // Pins where the switch is connected
-const byte led_pins[5] = {10, 16, 14, 15, 18}; // Pins where LEDs are connected
-
-// Layer: this is the currently select layer (changed by the switch)
-byte current_layer = 0;
-
-// CC values are the numbers in the decimal column of this table
-// https://www.midi.org/specifications-old/item/table-3-control-change-messages-data-bytes-2
-
-const int button_layers[3][5] = {
-    /*
-    Layer 0
-    (Switch Up)
-    ,-----------------,
-    |  49    |     50 |
-    |-----------------|
-    |  51 |  80 |  81 |
-    `-----------------`
-    */
-    {
-        49, 50,
-        51, 80, 81},
-
-    /*
-    Layer 1
-    (Switch Off)
-    ,-----------------,
-    |  16    |     17 |
-    |-----------------|
-    |  18 |  19 |  48 |
-    `-----------------`
-    */
-    {
-        16, 17,
-        18, 19, 48},
-
-    /*
-    Layer 2
-    (Switch Down)
-    ,-----------------,
-    |  68    |     65 |
-    |-----------------|
-    |  67 |  66 |  64 |
-    `-----------------`
-    */
-    {
-        68, 65,
-        67, 66, 64}
-};
-
-// qui non ha senso separarli per layer, i bottoni sono 5, punto e fine,
-// o sono accesi o sono spenti, non ha senso che uno é acceso su 
-// un layer ma non su un altro layer
-int button_layers_states[3][5] = {
-    // Layer 0 (Switch Up)
-    {false, false, false, false, false},
-
-    // Layer 1 (Switch Off)
-    {false, false, false, false, false},
-
-    // Layer 2 (Switch Down)
-    {false, false, false, false, false}
-};
-
-// LED states
-bool led_states[5] = {false, false, false, false, false};
-
-byte ppqn = 0; // "Pulse Per Quarter Note"
-
-/*
-Utility functions
-*/
+// Utility functions
 
 // Event type is hard-coded (0x09 = note on, 0x08 = note off).
 // First parameter is the MIDI channel, combined with the note-on/note-off.
@@ -140,10 +60,90 @@ void initBPM()
     } while (rx.header != 0);
 }
 
-/*
-Actual logic
-*/
+// Button in "Push" mode
+void handlePushButton(byte i)
+{
+    if (digitalRead(button_pins[i]) == LOW && button_states[i] == false)
+    {
+        controlChange(0, button_layers[current_layer][i], 127);
+        MidiUSB.flush();
+        button_states[i] = true;
+        digitalWrite(led_pins[i], HIGH); // Turn the LED on
+        led_states[i] = true;
+        delay(15);
+    }
+    else if (digitalRead(button_pins[i]) == HIGH && button_states[i] == true)
+    {
+        controlChange(0, button_layers[current_layer][i], 0);
+        MidiUSB.flush();
+        button_states[i] = false;
+        digitalWrite(led_pins[i], LOW); // Turn the LED off
+        led_states[i] = false;
+        delay(15);
+    }
+}
 
+// Button in "Toggle" mode
+void handleToggleButton(byte i)
+{
+    if (digitalRead(button_pins[i]) == LOW && button_states[i] == false)
+    {
+        controlChange(0, button_layers[current_layer][i], 127);
+        MidiUSB.flush();
+        button_states[i] = true;
+        digitalWrite(led_pins[i], HIGH); // Turn the LED on
+        led_states[i] = true;
+        delay(15);
+    }
+    else if (digitalRead(button_pins[i]) == LOW && button_states[i] == true)
+    {
+        controlChange(0, button_layers[current_layer][i], 0);
+        MidiUSB.flush();
+        button_states[i] = false;
+        digitalWrite(led_pins[i], LOW); // Turn the LED off
+        led_states[i] = false;
+        delay(15);
+    }
+}
+
+// Button "Change" mode
+void handleChangeMode(byte i)
+{
+    // Note: only layer 1 (switch OFF) can be customized
+    if (digitalRead(button_pins[i]) == LOW && button_modes[1][i] == 0)
+    {
+        button_modes[1][i] = 1;
+        digitalWrite(led_pins[i], HIGH); // Turn the LED on
+        led_states[i] = true;
+        delay(100);
+    }
+    else if (digitalRead(button_pins[i]) == LOW && button_modes[1][i] == 1)
+    {
+        button_modes[1][i] = 0;
+        digitalWrite(led_pins[i], LOW); // Turn the LED off
+        led_states[i] = false;
+        delay(100);
+    }
+}
+
+// Check and set which layer is active
+void setLayer()
+{
+    if (digitalRead(switch_pins[0]) == LOW && digitalRead(switch_pins[1]) == HIGH && current_layer != 0)
+    {
+        current_layer = 0; // Switch UP
+    }
+    else if (digitalRead(switch_pins[0]) == HIGH && digitalRead(switch_pins[1]) == HIGH && current_layer != 1)
+    {
+        current_layer = 1; // Switch OFF
+    }
+    else if (digitalRead(switch_pins[0]) == HIGH && digitalRead(switch_pins[1]) == LOW && current_layer != 2)
+    {
+        current_layer = 2; // Switch DOWN
+    }
+}
+
+// Actual logic
 void setup()
 {
     Serial.begin(115200);
@@ -162,50 +162,33 @@ void setup()
     {
         pinMode(switch_pins[i], INPUT_PULLUP);
     }
+    // Set currently active Layer
+    setLayer();
 }
 
 void loop()
 {
+    initBPM(); // Blinking BPM LED - needs to be enabled in your DAW
 
-    // Blinking BPM LED
-    // Enable BPM counter in Ableton to see it blink
-    // You will probably need to adjust ms delay in your DAW to keep it in sync
-    initBPM();
-
-    // Set which Layer we are using
-    if (digitalRead(switch_pins[0]) == LOW && digitalRead(switch_pins[1]) == HIGH && current_layer != 0)
-    {
-        current_layer = 0;
-    }
-    else if (digitalRead(switch_pins[0]) == HIGH && digitalRead(switch_pins[1]) == HIGH && current_layer != 1)
-    {
-        current_layer = 1;
-    }
-    else if (digitalRead(switch_pins[0]) == HIGH && digitalRead(switch_pins[1]) == LOW && current_layer != 2)
-    {
-        current_layer = 2;
-    }
+    setLayer(); // Set which Layer we are using
 
     // Button operations based on current_layer
     for (uint8_t i = 0; i < 5; i++)
     {
-        if (digitalRead(button_pins[i]) == LOW && button_layers_states[current_layer][i] == false)
+        if (current_layer < 2) // Only layers 0 and 1 are normal operational layers
         {
-            controlChange(0, button_layers[current_layer][i], 127);
-            MidiUSB.flush();
-            button_layers_states[current_layer][i] = true;
-            digitalWrite(led_pins[i], HIGH); // Turn the LED on
-            led_states[i] = true;
-            delay(15);
+            if (button_modes[current_layer][i] == 0)
+            {
+                handlePushButton(i);
+            }
+            else if (button_modes[current_layer][i] == 1)
+            {
+                handleToggleButton(i);
+            }
         }
-        else if (digitalRead(button_pins[i]) == HIGH && button_layers_states[current_layer][i] == true)
+        else if (current_layer == 2) // Layer 2 is the "settings" layer
         {
-            controlChange(0, button_layers[current_layer][i], 0);
-            MidiUSB.flush();
-            button_layers_states[current_layer][i] = false;
-            digitalWrite(led_pins[i], LOW); // Turn the LED off
-            led_states[i] = false;
-            delay(15);
+            handleChangeMode(i);
         }
     }
 }
