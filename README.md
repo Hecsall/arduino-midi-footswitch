@@ -14,7 +14,8 @@ USB MIDI Pedal built with Arduino.
 1. [Materials](#materials)
 2. [Hardware setup](#hardware-setup)
 3. [Software setup](#software-setup)
-
+4. [Rename the device](#rename-the-device)
+5. [Usage](#usage)
 
 
 ## Materials:
@@ -114,7 +115,7 @@ you will have to install the board in your Arduino IDE, to do so, follow this li
 https://learn.sparkfun.com/tutorials/pro-micro--fio-v3-hookup-guide/installing-windows#windows_boardaddon
 
 Ok, now we are ready to upload your code, finally.<br>
-Open the arduino_midi_footswitch.ino file, and if you made changes on pin wiring, be sure to edit the **button_pins**, **led_pins** or **layer_switch_pins** variables according to your wiring.<br>
+Open the variables.h file, and if you made changes on pin wiring, be sure to edit the **button_pins**, **led_pins** or **switch_pins** variables according to your wiring.<br>
 Plug the USB cable from your Arduino/SparkFun to your PC, under Tools select the proper board and, if needed, select the proper CPU (SparkFun Pro Micro comes in 2 versions, 8MHz and 16Mhz, flashing the wrong one will cause the board to "soft brick", and you will need to reset it manually, *learned this the hard way*).<br>
 Now select the proper port and we can upload the code!
 
@@ -144,6 +145,17 @@ Now change every "left side" occurrence of your board name with something else (
     width="300">
 
 After doing this, restart your Arduino IDE and under Tools > Boards you should find your newly created board with the name you have set.
+
+
+
+## Usage:
+The MIDI footswitch changes his operational mode based on which position the rear switch is on.\
+So you have 2 "layers" of MIDI commands you can send, 5 on one layer and 5 on the other.\
+The **first layer** (switch up) have 5 static commands that all act as push buttons.\
+The **second layer** have 5 commands which behaviour *can be customized using the third layer*.\
+The **third layer**, is only a "settings" layer, pressing a button on this layer will turn on or off it's LED, changing the button behaviour. \
+LED OFF = the button acts as push button\
+LED ON = the button acts as Switch button
 
 
 
