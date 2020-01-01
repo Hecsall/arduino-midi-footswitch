@@ -10,7 +10,7 @@ USB MIDI Pedal built with Arduino.
 
 > **Update November 2019:**\
 I've refactored the code to add a new "settings layer", read the Usage section for more info.\
-It's still a "beta" version but i'm planning to change how the footswitch operates, see the Roadmap.
+It's still a "beta" version but i'm planning to change how the footswitch operates as soon i have some free time, see the Roadmap.
 
 ## Sections:
 1. [Materials](#materials)
