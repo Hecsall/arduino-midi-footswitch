@@ -108,9 +108,9 @@ Fix the SparkFun to the enclosure (screws, hot glue, or both lol), connect some 
 
 
 ## Software setup:
-For the software part i'm assuming you already have Arduino IDE installed (mine is version 1.8.9).<br>
+For the software part i'm assuming you already have Arduino IDE installed (mine is version 1.8.15).<br>
 In the Arduino IDE go to Sketch > Include Library > Manage Libraries.<br>
-Here search for **MIDIUSB**, a library from Gary Grewal, and install the latest version.
+Here search for the **MIDIUSB** library from Arduino, and install the latest version.
 
 **Only if you are using a SparkFun Pro Micro as i do**<br>
 you will have to install the board in your Arduino IDE, to do so, follow this link and follow the instructions under "Installing the Arduino Addon"

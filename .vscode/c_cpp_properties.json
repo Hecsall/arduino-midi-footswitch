@@ -3,10 +3,10 @@
         {
             "name": "Mac",
             "includePath": [
-                "/Users/simone/Library/Arduino15/packages/SparkFun/hardware/avr/1.1.12/**",
+                "/Users/simone/Library/Arduino15/packages/SparkFun/hardware/avr/1.1.13/**",
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\**",
                 "C:\\Program Files (x86)\\Arduino\\tools\\**",
-                "C:\\Users\\simon\\AppData\\Local\\Arduino15\\packages\\SparkFun\\hardware\\avr\\1.1.12\\**"
+                "C:\\Users\\Simone\\AppData\\Local\\Arduino15\\packages\\SparkFun\\hardware\\avr\\1.1.13\\**"
             ],
             "forcedInclude": [
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\cores\\arduino\\Arduino.h"
@@ -23,12 +23,17 @@
         {
             "name": "Win32",
             "includePath": [
-                "C:\\Users\\simon\\AppData\\Local\\Arduino15\\packages\\SparkFun\\hardware\\avr\\1.1.12\\**",
+                "C:\\Users\\Simone\\AppData\\Local\\Arduino15\\packages\\SparkFun\\hardware\\avr\\1.1.13\\**",
+                "C:\\Users\\Simone\\Documents\\Arduino\\libraries\\**",
+                "C:\\Users\\Simone\\Documents\\Arduino\\libraries\\MIDIUSB\\src\\**",
+                
                 "${workspaceFolder}",
+                "C:\\Program Files (x86)\\Arduino\\hardware\\tools\\avr\\avr\\**",
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\**",
                 "C:\\Program Files (x86)\\Arduino\\tools\\**"
             ],
-            "forcedInclude": []
+            "forcedInclude": [],
+            "defines": ["USBCON"]
         }
     ],
     "version": 4

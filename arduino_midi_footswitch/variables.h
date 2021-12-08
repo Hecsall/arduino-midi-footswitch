@@ -21,7 +21,8 @@ const int button_layers[2][5] = {
     */
     {
         49,     50,
-        51, 80, 81},
+        51, 80, 81
+    },
 
     /*
     Layer 1 (Switch Off)
@@ -33,7 +34,8 @@ const int button_layers[2][5] = {
     */
     {
         16,     17,
-        18, 19, 48}
+        18, 19, 48
+    }
 };
 
 // Button modes: 0 = push button, 1 = toggle button
