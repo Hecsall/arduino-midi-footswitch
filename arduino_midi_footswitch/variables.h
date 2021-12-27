@@ -1,7 +1,7 @@
 
 // Arduino Pins
-const byte button_pins[5] = {2, 3, 4, 5, 6};   // Pins where buttons are connected
-const byte switch_pins[2] = {8, 9};            // Pins where the switch is connected
+const byte button_pins[5] = {5, 6, 7, 8, 9};   // Pins where buttons are connected
+const byte switch_pins[2] = {1, 0};            // Pins where the switch is connected
 const byte led_pins[5] = {10, 16, 14, 15, 18}; // Pins where LEDs are connected
 
 // Layer: this is the currently select layer (changed by the switch)
