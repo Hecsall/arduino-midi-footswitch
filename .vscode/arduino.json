@@ -1,7 +1,0 @@
-{
-    "board": "SparkFun:avr:footswitch",
-    "port": "COM10",
-    "sketch": "arduino_midi_footswitch/arduino_midi_footswitch.ino",
-    "programmer": "AVRISP mkII",
-    "configuration": "cpu=16MHzatmega32U4"
-}
