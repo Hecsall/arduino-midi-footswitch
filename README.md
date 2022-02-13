@@ -152,21 +152,15 @@ If everything is correct, it should be working. When you push a button the relat
 
 ## Rename the device:
 This is an optional step. Normally, when you plug your footswitch, it will appear as "SparkFun Pro Micro" (or the name of the board you are using), so I decided to rename it.
-It's a very simple and fast step. Go to<br>
-```C:\Program Files (x86)\Arduino\hardware\arduino\avr```<br>
-(in my case ```C:\Users\<username>\AppData\Local\Arduino15\packages\SparkFun\hardware\avr\1.1.12``` because I'm using a SparkFun board and not an Arduino)<br>
-and open the boards.txt file. Here search for your board name (i.e "pro micro") and you should find the definition of your board.
+It's a very simple and fast step.
 
+Follow the instructions created by nebhead at this link:
+[https://gist.github.com/nebhead/c92da8f1a8b476f7c36c032a0ac2592a](https://gist.github.com/nebhead/c92da8f1a8b476f7c36c032a0ac2592a)
 
-Copy the entire definition block of code (including eventual 8/16 MHz definitions) and paste it at the end of the file.<br> 
-Now change every "left side" occurrence of your board name with something else (see image below, click to open the large version).<br> On the "right side" change only the board names and PID (the PID should be a different number from other boards), my suggestion is to take the original number, for example "0x9203", and edit the first 3 numbers after the "0x", something like "0x6663" so you keep the last number consistent.
+I'll leave my own board file inside the `other/` folder in this repo as an example.\
+In my case I named my folder `footswitch` and the device name is **MIDI Footswitch**.
 
-<img 
-    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/boards_txt.jpg"
-    alt="boards.txt"
-    width="300">
-
-After doing this, restart your Arduino IDE and under Tools > Boards you should find your newly created board with the name you have set.
+After doing everything, restart your Arduino IDE and under Tools > Boards you should find a new "subcategory" with your newly created board inside.
 
 
 
@@ -185,7 +179,3 @@ LED ON = the button acts as Switch button
 - SparkFun Pro Micro setup for Arduino IDE: https://learn.sparkfun.com/tutorials/pro-micro--fio-v3-hookup-guide/installing-windows#windows_boardaddon
 - MIDIUSB Arduino library: https://www.arduino.cc/en/Reference/MIDIUSB
 - MIDI CC table: https://www.midi.org/specifications-old/item/table-3-control-change-messages-data-bytes-2
-
-
-In the future, I could update this readme to add even more info.<br>
-If you encounter spelling errors forgive me, English is not my main language
