@@ -21,6 +21,11 @@ You can change which Note or CC message to send, and also how the button shoul a
 
 Every setting will be stored in the Arduino EEPROM memory, even if disconnected.
 
+<img 
+        src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/web-ui.png"
+        alt="Web Configurator"
+        width="600">
+
 ## Running the Web Configurator
 
 See the README.md file inside the `app/` folder.
