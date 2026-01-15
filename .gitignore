@@ -1,5 +1,3 @@
+app/node_modules/
+app/dist/
 .DS_Store
-.tmp
-desktop.ini
-c_cpp_properties.json
-arduino.json
