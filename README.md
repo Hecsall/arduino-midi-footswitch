@@ -1,6 +1,6 @@
 # Arduino MIDI Footswitch
 
-USB MIDI Pedal built with Arduino, configurable via Web UI
+USB MIDI Pedal built with Arduino, configurable via Web UI!
 
 >**Disclaimer:**<br>
 >Just a heads-up: I’m not a C developer.<br>
@@ -16,15 +16,18 @@ So you have 3 "layers" of MIDI commands you can send, 5 for each layer.
 Using the Web-app included in this repo (under `app/`) you can connect to the Pedal via WebSerial connection and customize each button.\
 You can change which Note or CC message to send, and also how the button shoul act:
 
-- Like a **momentary** (Press=ON - Release=OFF) 
+- Like a **momentary** (Press=ON - Release=OFF)
 - Like a **toggle** switch (Press=ON - Press again=OFF)
 
 Every setting will be stored in the Arduino EEPROM memory, even if disconnected.
 
+> [!NOTE]
+> See it live at [https://hecsall.github.io/arduino-midi-footswitch/](https://hecsall.github.io/arduino-midi-footswitch/)
+
 <img 
-        src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/web-ui.png"
-        alt="Web Configurator"
-        width="600">
+    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/web-ui.png"
+    alt="Web Configurator"
+    width="600">
 
 ## Running the Web Configurator
 

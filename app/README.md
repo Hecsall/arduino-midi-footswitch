@@ -2,11 +2,13 @@
 
 React web application that communicates directly with the MIDI Footswitch using the **Web Serial API**.
 
-<img 
-        src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/web-ui.png"
-        alt="Web Configurator"
-        width="600">
+> [!NOTE]
+> See it live at [https://hecsall.github.io/arduino-midi-footswitch/](https://hecsall.github.io/arduino-midi-footswitch/)
 
+<img 
+   src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/web-ui.png"
+   alt="Web Configurator"
+   width="600">
 
 ## Usage
 
