@@ -6,10 +6,14 @@ import clsx from 'clsx';
 
 function App() {
   const { isConnected, connect, disconnect, sendCommand, readResponse } = useWebSerial();
+  const LAYERS = 3;
   
-  // Initialize 15 buttons (3 layers x 5 buttons)
+  // Default to 5, but will adjust if device sends more
+  const [controlsPerLayer, setControlsPerLayer] = useState(5);
+  
+  // Initialize state
   const [buttons, setButtons] = useState(
-      Array.from({ length: 15 }, (_, i) => ({
+      Array.from({ length: LAYERS * 5 }, (_, i) => ({
           id: i,
           type: 'Note',
           value: 60 + i,
@@ -29,7 +33,9 @@ function App() {
           // Give it a moment to process command
           const lines = await readResponse(2000); // 2s timeout for more data
           
-          const newButtons = [...buttons];
+          let maxIndex = 0;
+          const parsedData = [];
+
           lines.forEach(line => {
               line = line.trim();
               if (line.startsWith("BTN:")) {
@@ -37,16 +43,38 @@ function App() {
                   const parts = line.split(":");
                   if (parts.length >= 5) {
                       const idx = parseInt(parts[1]);
+                      if (idx > maxIndex) maxIndex = idx;
+                      
                       const type = parts[2] === '1' ? 'CC' : 'Note';
                       const val = parseInt(parts[3]);
                       const mode = parts[4] === '1' ? 'Toggle' : 'Momentary';
-                      
-                      if (newButtons[idx]) {
-                          newButtons[idx] = { id: idx, type, value: val, mode };
-                      }
+                      parsedData.push({ idx, type, value: val, mode });
                   }
               }
           });
+
+          // Infer layout from data
+          const detectedTotal = maxIndex + 1;
+          const detectedPerLayer = Math.ceil(detectedTotal / LAYERS);
+          
+          if (detectedPerLayer !== controlsPerLayer) {
+             setControlsPerLayer(detectedPerLayer);
+          }
+
+          // Rebuild array
+          const newButtons = Array.from({ length: LAYERS * detectedPerLayer }, (_, i) => ({
+              id: i,
+              type: 'Note', // defaults
+              value: 60 + i,
+              mode: 'Momentary'
+          }));
+
+          parsedData.forEach(d => {
+             if (newButtons[d.idx]) {
+                 newButtons[d.idx] = { id: d.idx, type: d.type, value: d.value, mode: d.mode };
+             }
+          });
+
           setButtons(newButtons);
           setStatusMsg("Loaded successfully");
       } catch (e) {
@@ -179,18 +207,21 @@ function App() {
                 <table className="w-full text-left">
                     <thead className="bg-[#162032] text-slate-400 uppercase text-xs">
                         <tr>
-                            <th className="px-6 py-4 font-semibold">Button</th>
+                            <th className="px-6 py-4 font-semibold">Control Slot</th>
                             <th className="px-6 py-4 font-semibold">Type</th>
                             <th className="px-6 py-4 font-semibold">Value</th>
                             <th className="px-6 py-4 font-semibold">Mode</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-800">
-                        {buttons.slice(activeLayer * 5, (activeLayer + 1) * 5).map((btn, localIndex) => {
-                            const globalIndex = activeLayer * 5 + localIndex;
+                        {buttons.slice(activeLayer * controlsPerLayer, (activeLayer + 1) * controlsPerLayer).map((btn, localIndex) => {
+                            const globalIndex = activeLayer * controlsPerLayer + localIndex;
                             return (
                                 <tr key={globalIndex} className="hover:bg-slate-800/50 transition-colors">
-                                    <td className="px-6 py-4 font-medium text-slate-200">Footswitch {localIndex + 1}</td>
+                                    <td className="px-6 py-4 font-medium text-slate-200">
+                                        Slot {localIndex} 
+                                        {localIndex < 5 && <span className="ml-2 text-xs text-slate-500">(Button {localIndex + 1})</span>}
+                                    </td>
                                     <td className="px-6 py-4">
                                         <select 
                                             value={btn.type}

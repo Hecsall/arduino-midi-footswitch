@@ -141,8 +141,8 @@ export function useWebSerial() {
                  buffer = chunks.pop(); 
                  lines.push(...chunks);
                  
-                 // If we find our data, we can return early
-                 if (lines.filter(l => l.startsWith("BTN:")).length >= 5) {
+                 // If we find the completion signal, return
+                 if (lines.some(l => l.trim() === "OK: GET")) {
                      break; 
                  }
              }
