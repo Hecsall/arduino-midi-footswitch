@@ -8,9 +8,12 @@
 
 // --- Configuration ---
 // Define how many logical control slots exist per layer.
-// This usually matches the number of Inputs (Buttons/Pots).
-// LEDs do not count towards this limit as they share the logical ID of a button.
-const int NUM_CONTROLS = 5; 
+// This usually matches the number of Inputs (Buttons/Potentiometers).
+// LEDs DO NOT COUNT towards this limit as they share the logical ID of a button.
+// Example:
+// 5 Buttons? = 5 Controls
+// 4 Buttons + 2 Potentiometers = 6 Controls
+const int NUM_CONTROLS = 6; 
 const int NUM_LAYERS = 3; // L, Center, R
 
 enum ComponentType {
@@ -27,23 +30,24 @@ struct HardwareComponent {
 
 // --- USER HARDWARE DEFINITION --
 HardwareComponent hardware[] = {
-  // Existing Buttons
+  // Buttons
   { COMP_BUTTON, 5, 0 },
   { COMP_BUTTON, 6, 1 },
   { COMP_BUTTON, 7, 2 },
   { COMP_BUTTON, 8, 3 },
   { COMP_BUTTON, 9, 4 },
   
-  // Existing LEDs
+  // LEDs (they are not configurable, use the same logical IDs as the paired button)
   { COMP_LED, 10, 0 },
   { COMP_LED, 16, 1 },
   { COMP_LED, 14, 2 },
   { COMP_LED, 15, 3 },
   { COMP_LED, 18, 4 },
 
-  // Example: Potentiometer (uncomment to use)
-  // { COMP_POT, A0, 5 }
+  // Potentiometers
+  { COMP_POT, A0, 5 }
 };
+// --- End USER HARDWARE DEFINITION --
 
 const int HW_COUNT = sizeof(hardware) / sizeof(hardware[0]);
 
@@ -196,6 +200,29 @@ void parseCommand(String cmd) {
     Serial.println(NUM_LAYERS);
     Serial.print("SYS:CONTROLS:");
     Serial.println(NUM_CONTROLS);
+    
+    // Dump Hardware Layout
+    for (int i = 0; i < NUM_CONTROLS; i++) {
+      int type = -1; 
+      for (int h = 0; h < HW_COUNT; h++) {
+        if (hardware[h].logicalId == i) {
+          if (hardware[h].type == COMP_POT) { 
+             type = 1; 
+             break; // Found Pot, wins
+          }
+          if (hardware[h].type == COMP_BUTTON) { 
+             type = 0; 
+          }
+        }
+      }
+      if (type != -1) {
+        Serial.print("SYS:TYPE:");
+        Serial.print(i);
+        Serial.print(":");
+        Serial.println(type == 1 ? "POT" : "BTN");
+      }
+    }
+    
     Serial.println("OK: INFO");
   } else if (cmd.startsWith("SET")) {
     int firstSpace = cmd.indexOf(' ');

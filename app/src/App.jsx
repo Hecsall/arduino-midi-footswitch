@@ -10,6 +10,7 @@ function App() {
   
   // Default to 5, but will adjust if device sends more
   const [controlsPerLayer, setControlsPerLayer] = useState(5);
+  const [slotTypes, setSlotTypes] = useState({});
 
   // Auto-detect hardware config on connection
   React.useEffect(() => {
@@ -22,14 +23,22 @@ function App() {
                 await sendCommand("INFO");
                 const lines = await readResponse(1000);
                 
+                const newSlotTypes = {};
                 lines.forEach(line => {
                     if (line.startsWith("SYS:CONTROLS:")) {
                         const val = parseInt(line.split(":")[2]);
                         if (!isNaN(val) && val > 0) {
                             setControlsPerLayer(val);
                         }
+                    } else if (line.startsWith("SYS:TYPE:")) {
+                        // SYS:TYPE:index:type
+                        const parts = line.split(":");
+                        if (parts.length >= 4) {
+                            newSlotTypes[parseInt(parts[2])] = parts[3].trim();
+                        }
                     }
                 });
+                setSlotTypes(newSlotTypes);
             } catch (e) {
                 console.error("Info fetch failed", e);
             }
@@ -264,11 +273,20 @@ function App() {
                     <tbody className="divide-y divide-gray-800">
                         {buttons.slice(activeLayer * controlsPerLayer, (activeLayer + 1) * controlsPerLayer).map((btn, localIndex) => {
                             const globalIndex = activeLayer * controlsPerLayer + localIndex;
+                            const isPot = slotTypes[localIndex] === 'POT';
+                            
                             return (
                                 <tr key={globalIndex} className="hover:bg-slate-800/50 transition-colors">
                                     <td className="px-6 py-4 font-medium text-slate-200">
-                                        Slot {localIndex} 
-                                        {localIndex < 5 && <span className="ml-2 text-xs text-slate-500">(Button {localIndex + 1})</span>}
+
+                                        <span className="flex items-center gap-2">
+                                            {isPot ? (
+                                                <>Slot {localIndex} <span className="text-xs text-red-400 bg-red-400/10 px-2 py-0.5 rounded">POT</span></>
+                                            ) : (
+                                                <>Slot {localIndex} <span className="text-xs text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded">BTN</span></>
+                                            )}
+                                        </span>
+                                      
                                     </td>
                                     <td className="px-6 py-4">
                                         <select 
@@ -290,14 +308,18 @@ function App() {
                                         />
                                     </td>
                                     <td className="px-6 py-4">
-                                        <select 
-                                            value={btn.mode}
-                                            onChange={(e) => updateButton(globalIndex, 'mode', e.target.value)}
-                                            className="bg-input border border-gray-700 rounded px-3 py-2 text-slate-200 outline-none focus:border-primary w-32 appearance-none cursor-pointer"
-                                        >
-                                            <option value="Momentary">Momentary</option>
-                                            <option value="Toggle">Toggle</option>
-                                        </select>
+                                        {isPot ? (
+                                            <span className="text-slate-500 text-sm italic">Linear (0-127)</span>
+                                        ) : (
+                                            <select 
+                                                value={btn.mode}
+                                                onChange={(e) => updateButton(globalIndex, 'mode', e.target.value)}
+                                                className="bg-input border border-gray-700 rounded px-3 py-2 text-slate-200 outline-none focus:border-primary w-32 appearance-none cursor-pointer"
+                                            >
+                                                <option value="Momentary">Momentary</option>
+                                                <option value="Toggle">Toggle</option>
+                                            </select>
+                                        )}
                                     </td>
                                 </tr>
                             );
