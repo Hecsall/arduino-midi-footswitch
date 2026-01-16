@@ -142,7 +142,7 @@ export function useWebSerial() {
                  lines.push(...chunks);
                  
                  // If we find the completion signal, return
-                 if (lines.some(l => l.trim() === "OK: GET")) {
+                 if (lines.some(l => l.trim() === "OK: GET") || lines.some(l => l.trim() === "OK: INFO")) {
                      break; 
                  }
              }

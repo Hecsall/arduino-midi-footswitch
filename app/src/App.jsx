@@ -10,6 +10,33 @@ function App() {
   
   // Default to 5, but will adjust if device sends more
   const [controlsPerLayer, setControlsPerLayer] = useState(5);
+
+  // Auto-detect hardware config on connection
+  React.useEffect(() => {
+    if (isConnected) {
+        const fetchInfo = async () => {
+            // Small delay to ensure port is ready
+            await new Promise(r => setTimeout(r, 100));
+            
+            try {
+                await sendCommand("INFO");
+                const lines = await readResponse(1000);
+                
+                lines.forEach(line => {
+                    if (line.startsWith("SYS:CONTROLS:")) {
+                        const val = parseInt(line.split(":")[2]);
+                        if (!isNaN(val) && val > 0) {
+                            setControlsPerLayer(val);
+                        }
+                    }
+                });
+            } catch (e) {
+                console.error("Info fetch failed", e);
+            }
+        };
+        fetchInfo();
+    }
+  }, [isConnected]);
   
   // Initialize state
   const [buttons, setButtons] = useState(
@@ -20,6 +47,27 @@ function App() {
           mode: 'Momentary'
       }))
   );
+
+  // Resize buttons array when controlsPerLayer changes
+  React.useEffect(() => {
+     setButtons(prev => {
+         const newSize = LAYERS * controlsPerLayer;
+         if (prev.length === newSize) return prev;
+         
+         const newArr = Array.from({ length: newSize }, (_, i) => ({
+            id: i,
+            type: 'Note',
+            value: 60 + i,
+            mode: 'Momentary'
+         }));
+         
+         // Preserve existing data where possible
+         prev.forEach((p, i) => {
+             if (i < newArr.length) newArr[i] = p;
+         });
+         return newArr;
+     });
+  }, [controlsPerLayer]);
   
   const [isLoading, setIsLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');

@@ -191,7 +191,13 @@ void parseCommand(String cmd) {
   cmd.trim();
   if (cmd.length() == 0) return;
 
-  if (cmd.startsWith("SET")) {
+  if (cmd.equals("INFO")) {
+    Serial.print("SYS:LAYERS:");
+    Serial.println(NUM_LAYERS);
+    Serial.print("SYS:CONTROLS:");
+    Serial.println(NUM_CONTROLS);
+    Serial.println("OK: INFO");
+  } else if (cmd.startsWith("SET")) {
     int firstSpace = cmd.indexOf(' ');
     int secondSpace = cmd.indexOf(' ', firstSpace + 1);
     int thirdSpace = cmd.indexOf(' ', secondSpace + 1);
