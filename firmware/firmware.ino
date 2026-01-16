@@ -50,7 +50,9 @@ bool lastButtonState[NUM_BUTTONS] = {HIGH, HIGH, HIGH, HIGH, HIGH}; // HIGH = Re
 bool toggleState[NUM_LAYERS][NUM_BUTTONS]; // Toggle state per layer
 int activeLayer[NUM_BUTTONS]; // Tracks which layer was active when button was pressed
 unsigned long lastDebounceTime[NUM_BUTTONS] = {0};
-unsigned long debounceDelay = 50;
+// Debounce to prevent accidental excessive button readings.
+// I tried lower than 10 but sometimes triggers fake readings, 10ms seems acceptable.
+unsigned long debounceDelay = 10; 
 int ppqn = 0;
 unsigned long beatLedOffTime = 0;
 
