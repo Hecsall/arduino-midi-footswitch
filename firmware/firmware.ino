@@ -18,14 +18,6 @@ struct HardwareComponent {
 };
 
 // --- USER HARDWARE DEFINITION --
-
-// Define how many logical control slots exist per layer.
-// This matches the number of Inputs (Buttons/Potentiometers).
-// LEDs DO NOT COUNT towards this limit as they share the logical ID of a button.
-// Example:
-// 5 Buttons? = 5 Controls
-// 4 Buttons + 2 Potentiometers? = 6 Controls
-const int NUM_CONTROLS = 5; 
 const int NUM_LAYERS = 3; // L, Center, R
 
 HardwareComponent hardware[] = {
@@ -47,6 +39,12 @@ HardwareComponent hardware[] = {
   // { COMP_POT, A1, 5 }
 };
 // --- End USER HARDWARE DEFINITION --
+
+// MAX_CONTROLS defines the storage limit and array sizes. 
+// Should be large enough to accommodate mostly any setup
+const int MAX_CONTROLS = 20;
+// numControls will be calculated automatically in setup() based on hardware definitions.
+int numControls = 0; 
 
 const int HW_COUNT = sizeof(hardware) / sizeof(hardware[0]);
 
@@ -80,14 +78,14 @@ struct ControlConfig {
 };
 
 // Storage for all layers [Layer][Control]
-ControlConfig controlConfigs[NUM_LAYERS][NUM_CONTROLS];
+ControlConfig controlConfigs[NUM_LAYERS][MAX_CONTROLS];
 
 // State tracking
-bool lastButtonState[NUM_CONTROLS]; // HIGH = Released
-int lastPotValue[NUM_CONTROLS]; // 0-127
-bool toggleState[NUM_LAYERS][NUM_CONTROLS]; // Toggle state per layer
-int activeLayer[NUM_CONTROLS]; // Tracks which layer was active when button was pressed
-unsigned long lastDebounceTime[NUM_CONTROLS];
+bool lastButtonState[MAX_CONTROLS]; // HIGH = Released
+int lastPotValue[MAX_CONTROLS]; // 0-127
+bool toggleState[NUM_LAYERS][MAX_CONTROLS]; // Toggle state per layer
+int activeLayer[MAX_CONTROLS]; // Tracks which layer was active when button was pressed
+unsigned long lastDebounceTime[MAX_CONTROLS];
 // Debounce to prevent accidental excessive button readings.
 unsigned long debounceDelay = 10; 
 int ppqn = 0;
@@ -113,8 +111,18 @@ void sendCC(byte channel, byte control, byte value);
 void setup() {
   Serial.begin(115200);
 
+  // Auto-detect number of controls based on max logicalId in hardware array
+  int maxLogicalId = -1;
+  for (int i = 0; i < HW_COUNT; i++) {
+    if (hardware[i].logicalId > maxLogicalId) {
+      maxLogicalId = hardware[i].logicalId;
+    }
+  }
+  numControls = maxLogicalId + 1;
+  if (numControls > MAX_CONTROLS) numControls = MAX_CONTROLS; // Safety clamp
+
   // Init State Arrays
-  for(int i=0; i<NUM_CONTROLS; i++) {
+  for(int i=0; i<MAX_CONTROLS; i++) {
     lastButtonState[i] = HIGH;
     lastPotValue[i] = -1;
     activeLayer[i] = 1; // Default Center
@@ -137,7 +145,7 @@ void setup() {
 
   // Init toggle states
   for (int l = 0; l < NUM_LAYERS; l++) {
-    for (int b = 0; b < NUM_CONTROLS; b++) {
+    for (int b = 0; b < MAX_CONTROLS; b++) {
       toggleState[l][b] = false;
     }
   }
@@ -201,10 +209,10 @@ void parseCommand(String cmd) {
     Serial.print("SYS:LAYERS:");
     Serial.println(NUM_LAYERS);
     Serial.print("SYS:CONTROLS:");
-    Serial.println(NUM_CONTROLS);
+    Serial.println(numControls);
     
     // Dump Hardware Layout
-    for (int i = 0; i < NUM_CONTROLS; i++) {
+    for (int i = 0; i < numControls; i++) {
       int type = -1; 
       for (int h = 0; h < HW_COUNT; h++) {
         if (hardware[h].logicalId == i) {
@@ -242,10 +250,13 @@ void parseCommand(String cmd) {
       int minV = cmd.substring(fifthSpace + 1, sixthSpace).toInt();
       int maxV = cmd.substring(sixthSpace + 1).toInt();
 
-      int totalItems = NUM_CONTROLS * NUM_LAYERS;
-      if (idx >= 0 && idx < totalItems) {
-        int layer = idx / NUM_CONTROLS;
-        int btn = idx % NUM_CONTROLS;
+      int totalItems = MAX_CONTROLS * NUM_LAYERS;
+      // We need to calculate bounds based on what the App sees (numControls * NUM_LAYERS)
+      int validTotal = numControls * NUM_LAYERS;
+
+      if (idx >= 0 && idx < validTotal) {
+        int layer = idx / numControls;
+        int btn = idx % numControls;
         
         controlConfigs[layer][btn].type = type;
         controlConfigs[layer][btn].value = val;
@@ -256,13 +267,20 @@ void parseCommand(String cmd) {
       }
     }
   } else if (cmd.equals("GET")) {
-    int totalItems = NUM_CONTROLS * NUM_LAYERS;
+    // Send all stored data (MAX_CONTROLS) so App can see everything if needed, 
+    // or we can limit to numControls. Restoring based on MAX is safer for EEPROM backup.
+    int totalItems = MAX_CONTROLS * NUM_LAYERS;
     for (int i = 0; i < totalItems; i++) {
-      int layer = i / NUM_CONTROLS;
-      int btn = i % NUM_CONTROLS;
+      int layer = i / MAX_CONTROLS;
+      int btn = i % MAX_CONTROLS;
       
+      // Optimization: Only send active ones to speed up
+      if (btn >= numControls) continue;
+
+      int logicalFlatIndex = (layer * numControls) + btn;
+
       Serial.print("BTN:");
-      Serial.print(i);
+      Serial.print(logicalFlatIndex);
       Serial.print(":");
       Serial.print(controlConfigs[layer][btn].type);
       Serial.print(":");
@@ -294,7 +312,7 @@ void readHardware() {
 
   for (int i = 0; i < HW_COUNT; i++) {
     int idx = hardware[i].logicalId;
-    if (idx < 0 || idx >= NUM_CONTROLS) continue;
+    if (idx < 0 || idx >= numControls) continue;
 
     if (hardware[i].type == COMP_BUTTON) {
         int reading = digitalRead(hardware[i].pin);
@@ -303,10 +321,10 @@ void readHardware() {
           lastDebounceTime[idx] = millis();
         }
         
-        static int stableState[NUM_CONTROLS];
+        static int stableState[MAX_CONTROLS];
         static bool initialized = false;
         if (!initialized) {
-           for(int k=0; k<NUM_CONTROLS; k++) stableState[k] = HIGH;
+           for(int k=0; k<MAX_CONTROLS; k++) stableState[k] = HIGH;
            initialized = true;
         }
 
@@ -380,7 +398,7 @@ void updateLEDs() {
   for (int i = 0; i < HW_COUNT; i++) {
     if (hardware[i].type == COMP_LED) {
        int idx = hardware[i].logicalId;
-       if (idx < 0 || idx >= NUM_CONTROLS) continue;
+       if (idx < 0 || idx >= numControls) continue;
        
        bool ledOn = false;
        ControlConfig cfg = controlConfigs[layer][idx];
@@ -429,7 +447,7 @@ void saveConfig() {
   EEPROM.update(addr++, EEPROM_SIG[1]);
   
   for (int l = 0; l < NUM_LAYERS; l++) {
-    for (int b = 0; b < NUM_CONTROLS; b++) {
+    for (int b = 0; b < MAX_CONTROLS; b++) {
       EEPROM.update(addr++, controlConfigs[l][b].type);
       EEPROM.update(addr++, controlConfigs[l][b].value);
       EEPROM.update(addr++, controlConfigs[l][b].mode);
@@ -442,7 +460,7 @@ void saveConfig() {
 
 void setDefaults() {
   for (int l = 0; l < NUM_LAYERS; l++) {
-    for (int b = 0; b < NUM_CONTROLS; b++) {
+    for (int b = 0; b < MAX_CONTROLS; b++) {
       controlConfigs[l][b].type = TYPE_NOTE;
       int baseNote = 60 + (l * 12); 
       controlConfigs[l][b].value = baseNote + b;
@@ -461,7 +479,7 @@ void loadConfig() {
   
   if (m1 == EEPROM_SIG[0] && m2 == EEPROM_SIG[1]) {
     for (int l = 0; l < NUM_LAYERS; l++) {
-      for (int b = 0; b < NUM_CONTROLS; b++) {
+      for (int b = 0; b < MAX_CONTROLS; b++) {
         controlConfigs[l][b].type = EEPROM.read(addr++);
         controlConfigs[l][b].value = EEPROM.read(addr++);
         controlConfigs[l][b].mode = EEPROM.read(addr++);

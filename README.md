@@ -25,8 +25,6 @@ At the top of the `firmware.ino` file, you’ll find the
 `--- USER HARDWARE DEFINITION --` section:
 
 ```c
-// How many hardware inputs you have (buttons + potentiometers)
-const int NUM_CONTROLS = 6; 
 // Layers (usually 3 with a 3-way switch)
 const int NUM_LAYERS = 3;
 
@@ -51,6 +49,9 @@ HardwareComponent hardware[] = {
   // { COMP_POT, A1, 5 }
 };
 ```
+
+Also, a `MAX_CONTROLS` variable statically sets the maximum number of controls you can have to **20**.\
+This is used to generate a fixed configuration object inside Arduino's memory to avoid filling too much memory and to avoid other issues.
 
 ### Configurator App
 
