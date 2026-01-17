@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
-import { useWebSerial } from './hooks/useWebSerial';
-import { Settings, Save, Download, Zap, ZapOff, Layers } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import clsx from 'clsx';
+import { Settings, Save, Download, Zap, ZapOff, Layers } from 'lucide-react';
+
+import { useWebSerial } from './hooks/useWebSerial';
 
 function App() {
   const { isConnected, connect, disconnect, sendCommand, readResponse } = useWebSerial();
@@ -13,7 +14,7 @@ function App() {
   const [slotTypes, setSlotTypes] = useState({});
 
   // Auto-detect hardware config on connection
-  React.useEffect(() => {
+  useEffect(() => {
     if (isConnected) {
         const fetchInfo = async () => {
             // Small delay to ensure port is ready
@@ -53,12 +54,14 @@ function App() {
           id: i,
           type: 'Note',
           value: 60 + i,
-          mode: 'Momentary'
+          mode: 'Momentary',
+          min: 0,
+          max: 127
       }))
   );
 
   // Resize buttons array when controlsPerLayer changes
-  React.useEffect(() => {
+  useEffect(() => {
      setButtons(prev => {
          const newSize = LAYERS * controlsPerLayer;
          if (prev.length === newSize) return prev;
@@ -67,7 +70,9 @@ function App() {
             id: i,
             type: 'Note',
             value: 60 + i,
-            mode: 'Momentary'
+            mode: 'Momentary',
+            min: 0,
+            max: 127
          }));
          
          // Preserve existing data where possible
@@ -96,7 +101,7 @@ function App() {
           lines.forEach(line => {
               line = line.trim();
               if (line.startsWith("BTN:")) {
-                  // BTN:idx:type:val:mode
+                  // BTN:idx:type:val:mode:min:max
                   const parts = line.split(":");
                   if (parts.length >= 5) {
                       const idx = parseInt(parts[1]);
@@ -105,7 +110,10 @@ function App() {
                       const type = parts[2] === '1' ? 'CC' : 'Note';
                       const val = parseInt(parts[3]);
                       const mode = parts[4] === '1' ? 'Toggle' : 'Momentary';
-                      parsedData.push({ idx, type, value: val, mode });
+                      const min = parts.length >= 7 ? parseInt(parts[5]) : 0;
+                      const max = parts.length >= 7 ? parseInt(parts[6]) : 127;
+
+                      parsedData.push({ idx, type, value: val, mode, min, max });
                   }
               }
           });
@@ -123,12 +131,21 @@ function App() {
               id: i,
               type: 'Note', // defaults
               value: 60 + i,
-              mode: 'Momentary'
+              mode: 'Momentary',
+              min: 0,
+              max: 127
           }));
 
           parsedData.forEach(d => {
              if (newButtons[d.idx]) {
-                 newButtons[d.idx] = { id: d.idx, type: d.type, value: d.value, mode: d.mode };
+                 newButtons[d.idx] = { 
+                    id: d.idx, 
+                    type: d.type, 
+                    value: d.value, 
+                    mode: d.mode,
+                    min: d.min,
+                    max: d.max
+                 };
              }
           });
 
@@ -151,7 +168,10 @@ function App() {
           for (const btn of buttons) {
               const typeInt = btn.type === 'CC' ? 1 : 0;
               const modeInt = btn.mode === 'Toggle' ? 1 : 0;
-              const cmd = `SET ${btn.id} ${typeInt} ${btn.value} ${modeInt}`;
+              const minVal = btn.min ?? 0;
+              const maxVal = btn.max ?? 127;
+              
+              const cmd = `SET ${btn.id} ${typeInt} ${btn.value} ${modeInt} ${minVal} ${maxVal}`;
               await sendCommand(cmd);
               // tiny delay to prevent buffer overflow
               await new Promise(r => setTimeout(r, 30));
@@ -264,10 +284,12 @@ function App() {
                 <table className="w-full text-left">
                     <thead className="bg-[#162032] text-slate-400 uppercase text-xs">
                         <tr>
-                            <th className="px-6 py-4 font-semibold">Control Slot</th>
-                            <th className="px-6 py-4 font-semibold">Type</th>
-                            <th className="px-6 py-4 font-semibold">Value</th>
-                            <th className="px-6 py-4 font-semibold">Mode</th>
+                            <th className="px-4 py-4 font-semibold">Slot</th>
+                            <th className="px-4 py-4 font-semibold">Type</th>
+                            <th className="px-4 py-4 font-semibold">ID #</th>
+                            <th className="px-4 py-4 font-semibold">OFF Val</th>
+                            <th className="px-4 py-4 font-semibold">ON Val</th>
+                            <th className="px-4 py-4 font-semibold">Mode</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-800">
@@ -277,7 +299,7 @@ function App() {
                             
                             return (
                                 <tr key={globalIndex} className="hover:bg-slate-800/50 transition-colors">
-                                    <td className="px-6 py-4 font-medium text-slate-200">
+                                    <td className="px-4 py-4 font-medium text-slate-200">
 
                                         <span className="flex items-center gap-2">
                                             {isPot ? (
@@ -288,33 +310,57 @@ function App() {
                                         </span>
                                       
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-4">
                                         <select 
                                             value={btn.type}
                                             onChange={(e) => updateButton(globalIndex, 'type', e.target.value)}
-                                            className="bg-input border border-gray-700 rounded px-3 py-2 text-slate-200 outline-none focus:border-primary w-28 appearance-none cursor-pointer"
+                                            className="bg-input border border-gray-700 rounded px-2 py-2 text-slate-200 outline-none focus:border-primary w-24 appearance-none cursor-pointer"
                                         >
                                             <option value="Note">Note</option>
                                             <option value="CC">CC</option>
                                         </select>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-4">
                                         <input 
                                             type="number" 
                                             min="0" max="127"
                                             value={btn.value}
                                             onChange={(e) => updateButton(globalIndex, 'value', parseInt(e.target.value))}
-                                            className="bg-input border border-gray-700 rounded px-3 py-2 text-slate-200 outline-none focus:border-primary w-24"
+                                            className="bg-input border border-gray-700 rounded px-2 py-2 text-slate-200 outline-none focus:border-primary w-20"
                                         />
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-4">
+                                        {!isPot && (
+                                            <input 
+                                                type="number" 
+                                                min="0" max="127"
+                                                value={btn.min ?? 0}
+                                                onChange={(e) => updateButton(globalIndex, 'min', parseInt(e.target.value))}
+                                                className="bg-input border border-gray-700 rounded px-2 py-2 text-slate-200 outline-none focus:border-primary w-20"
+                                                title="Value sent when released (OFF)"
+                                            />
+                                        )}
+                                    </td>
+                                    <td className="px-4 py-4">
+                                        {!isPot && (
+                                            <input 
+                                                type="number" 
+                                                min="0" max="127"
+                                                value={btn.max ?? 127}
+                                                onChange={(e) => updateButton(globalIndex, 'max', parseInt(e.target.value))}
+                                                className="bg-input border border-gray-700 rounded px-2 py-2 text-slate-200 outline-none focus:border-primary w-20"
+                                                title="Value sent when pressed (ON)"
+                                            />
+                                        )}
+                                    </td>
+                                    <td className="px-4 py-4">
                                         {isPot ? (
-                                            <span className="text-slate-500 text-sm italic">Linear (0-127)</span>
+                                            <span className="text-slate-500 text-sm italic">Linear</span>
                                         ) : (
                                             <select 
                                                 value={btn.mode}
                                                 onChange={(e) => updateButton(globalIndex, 'mode', e.target.value)}
-                                                className="bg-input border border-gray-700 rounded px-3 py-2 text-slate-200 outline-none focus:border-primary w-32 appearance-none cursor-pointer"
+                                                className="bg-input border border-gray-700 rounded px-2 py-2 text-slate-200 outline-none focus:border-primary w-28 appearance-none cursor-pointer"
                                             >
                                                 <option value="Momentary">Momentary</option>
                                                 <option value="Toggle">Toggle</option>

@@ -3,18 +3,7 @@
 
 /*
   MIDI Footswitch Firmware
-  Modular Version
 */
-
-// --- Configuration ---
-// Define how many logical control slots exist per layer.
-// This usually matches the number of Inputs (Buttons/Potentiometers).
-// LEDs DO NOT COUNT towards this limit as they share the logical ID of a button.
-// Example:
-// 5 Buttons? = 5 Controls
-// 4 Buttons + 2 Potentiometers = 6 Controls
-const int NUM_CONTROLS = 6; 
-const int NUM_LAYERS = 3; // L, Center, R
 
 enum ComponentType {
   COMP_BUTTON,
@@ -29,6 +18,16 @@ struct HardwareComponent {
 };
 
 // --- USER HARDWARE DEFINITION --
+
+// Define how many logical control slots exist per layer.
+// This matches the number of Inputs (Buttons/Potentiometers).
+// LEDs DO NOT COUNT towards this limit as they share the logical ID of a button.
+// Example:
+// 5 Buttons? = 5 Controls
+// 4 Buttons + 2 Potentiometers? = 6 Controls
+const int NUM_CONTROLS = 6; 
+const int NUM_LAYERS = 3; // L, Center, R
+
 HardwareComponent hardware[] = {
   // Buttons
   { COMP_BUTTON, 5, 0 },
@@ -37,7 +36,7 @@ HardwareComponent hardware[] = {
   { COMP_BUTTON, 8, 3 },
   { COMP_BUTTON, 9, 4 },
   
-  // LEDs (they are not configurable, use the same logical IDs as the paired button)
+  // LEDs (not configurable, just match the same button ids)
   { COMP_LED, 10, 0 },
   { COMP_LED, 16, 1 },
   { COMP_LED, 14, 2 },
@@ -45,7 +44,7 @@ HardwareComponent hardware[] = {
   { COMP_LED, 18, 4 },
 
   // Potentiometers
-  { COMP_POT, A0, 5 }
+  // { COMP_POT, A1, 5 }
 };
 // --- End USER HARDWARE DEFINITION --
 
@@ -68,7 +67,7 @@ const int MODE_TOGGLE = 1;
 const int EEPROM_START_ADDR = 0;
 
 // Header signature. Change to force EEPROM reset when structure changes.
-const char EEPROM_SIG[2] = {'M', 'D'}; // 'D' for Modular (was 'C')
+const char EEPROM_SIG[2] = {'M', 'F'};
 
 // Struct for Control Settings
 struct ControlConfig {
@@ -76,6 +75,8 @@ struct ControlConfig {
   uint8_t value;   // Note number or CC number
   uint8_t mode;    // MODE_MOMENTARY or MODE_TOGGLE
   uint8_t channel; // MIDI Channel (default 1)
+  uint8_t minValue; // Value for OFF/Release
+  uint8_t maxValue; // Value for ON/Press
 };
 
 // Storage for all layers [Layer][Control]
@@ -229,12 +230,16 @@ void parseCommand(String cmd) {
     int secondSpace = cmd.indexOf(' ', firstSpace + 1);
     int thirdSpace = cmd.indexOf(' ', secondSpace + 1);
     int fourthSpace = cmd.indexOf(' ', thirdSpace + 1);
+    int fifthSpace = cmd.indexOf(' ', fourthSpace + 1);
+    int sixthSpace = cmd.indexOf(' ', fifthSpace + 1);
 
-    if (firstSpace > 0 && secondSpace > 0 && thirdSpace > 0 && fourthSpace > 0) {
+    if (firstSpace > 0 && secondSpace > 0 && thirdSpace > 0 && fourthSpace > 0 && fifthSpace > 0 && sixthSpace > 0) {
       int idx = cmd.substring(firstSpace + 1, secondSpace).toInt();
       int type = cmd.substring(secondSpace + 1, thirdSpace).toInt();
       int val = cmd.substring(thirdSpace + 1, fourthSpace).toInt();
-      int mode = cmd.substring(fourthSpace + 1).toInt();
+      int mode = cmd.substring(fourthSpace + 1, fifthSpace).toInt();
+      int minV = cmd.substring(fifthSpace + 1, sixthSpace).toInt();
+      int maxV = cmd.substring(sixthSpace + 1).toInt();
 
       int totalItems = NUM_CONTROLS * NUM_LAYERS;
       if (idx >= 0 && idx < totalItems) {
@@ -244,6 +249,8 @@ void parseCommand(String cmd) {
         controlConfigs[layer][btn].type = type;
         controlConfigs[layer][btn].value = val;
         controlConfigs[layer][btn].mode = mode;
+        controlConfigs[layer][btn].minValue = minV;
+        controlConfigs[layer][btn].maxValue = maxV;
         Serial.println("OK: SET " + String(idx));
       }
     }
@@ -260,7 +267,11 @@ void parseCommand(String cmd) {
       Serial.print(":");
       Serial.print(controlConfigs[layer][btn].value);
       Serial.print(":");
-      Serial.println(controlConfigs[layer][btn].mode);
+      Serial.print(controlConfigs[layer][btn].mode);
+      Serial.print(":");
+      Serial.print(controlConfigs[layer][btn].minValue);
+      Serial.print(":");
+      Serial.println(controlConfigs[layer][btn].maxValue);
     }
     Serial.println("OK: GET");
   } else if (cmd.equals("SAVE")) {
@@ -333,18 +344,18 @@ void handlePress(int idx, int layer) {
   ControlConfig cfg = controlConfigs[layer][idx];
   
   if (cfg.mode == MODE_MOMENTARY) {
-    if (cfg.type == TYPE_NOTE) sendNoteOn(0, cfg.value, 127);
-    else sendCC(0, cfg.value, 127);
+    if (cfg.type == TYPE_NOTE) sendNoteOn(0, cfg.value, cfg.maxValue);
+    else sendCC(0, cfg.value, cfg.maxValue);
     
   } else if (cfg.mode == MODE_TOGGLE) {
     toggleState[layer][idx] = !toggleState[layer][idx];
     
     if (toggleState[layer][idx]) {
-       if (cfg.type == TYPE_NOTE) sendNoteOn(0, cfg.value, 127);
-       else sendCC(0, cfg.value, 127);
+       if (cfg.type == TYPE_NOTE) sendNoteOn(0, cfg.value, cfg.maxValue);
+       else sendCC(0, cfg.value, cfg.maxValue);
     } else {
-       if (cfg.type == TYPE_NOTE) sendNoteOff(0, cfg.value, 0);
-       else sendCC(0, cfg.value, 0);
+       if (cfg.type == TYPE_NOTE) sendNoteOff(0, cfg.value, cfg.minValue);
+       else sendCC(0, cfg.value, cfg.minValue);
     }
   }
 }
@@ -353,8 +364,8 @@ void handleRelease(int idx, int layer) {
   ControlConfig cfg = controlConfigs[layer][idx];
   
   if (cfg.mode == MODE_MOMENTARY) {
-    if (cfg.type == TYPE_NOTE) sendNoteOff(0, cfg.value, 0);
-    else sendCC(0, cfg.value, 0);
+    if (cfg.type == TYPE_NOTE) sendNoteOff(0, cfg.value, cfg.minValue);
+    else sendCC(0, cfg.value, cfg.minValue);
   }
 }
 
@@ -418,6 +429,8 @@ void saveConfig() {
       EEPROM.update(addr++, controlConfigs[l][b].value);
       EEPROM.update(addr++, controlConfigs[l][b].mode);
       EEPROM.update(addr++, controlConfigs[l][b].channel);
+      EEPROM.update(addr++, controlConfigs[l][b].minValue);
+      EEPROM.update(addr++, controlConfigs[l][b].maxValue);
     }
   }
 }
@@ -434,6 +447,8 @@ void loadConfig() {
         controlConfigs[l][b].value = EEPROM.read(addr++);
         controlConfigs[l][b].mode = EEPROM.read(addr++);
         controlConfigs[l][b].channel = EEPROM.read(addr++);
+        controlConfigs[l][b].minValue = EEPROM.read(addr++);
+        controlConfigs[l][b].maxValue = EEPROM.read(addr++);
       }
     }
   } else {
@@ -445,6 +460,8 @@ void loadConfig() {
         controlConfigs[l][b].value = baseNote + b;
         controlConfigs[l][b].mode = MODE_MOMENTARY;
         controlConfigs[l][b].channel = 0;
+        controlConfigs[l][b].minValue = 0;
+        controlConfigs[l][b].maxValue = 127;
       }
     }
   }

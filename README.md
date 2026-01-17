@@ -8,16 +8,60 @@ USB MIDI Pedal built with Arduino, configurable via Web UI!
 >I don’t plan to actively maintain or support this project, but it might still be useful as a small reference for others.<br>
 >Hopefully it helps someone out 😄
 
-## Usage
+## Features
+
+### Multiple Layers
 
 This MIDI Footswitch changes his operational mode based on which position the rear switch is on.\
-So you have 3 "layers" of MIDI commands you can send, 5 for each layer.
+So, with a 3-way switch, you have 3 "layers" of MIDI commands you can send.
+
+### Modularity
+
+The firmware is made to allow you to add (or remove) **Buttons**, **LEDs** and **Potentiometers** (not yet tested btw) with little configuration.\
+At the top of the `firmware.ino` file, you will find the `--- USER HARDWARE DEFINITION --` section:
+
+```c
+// How many hardware inputs you have (buttons + potentiometers)
+const int NUM_CONTROLS = 6; 
+// Layers (usually 3 with a 3-way switch)
+const int NUM_LAYERS = 3;
+
+// Format:
+// {hardware_type, arduino_pin, numerical_id}
+HardwareComponent hardware[] = {
+  // Buttons
+  { COMP_BUTTON, 5, 0 },
+  { COMP_BUTTON, 6, 1 },
+  { COMP_BUTTON, 7, 2 },
+  { COMP_BUTTON, 8, 3 },
+  { COMP_BUTTON, 9, 4 },
+  
+  // LEDs (not configurable, just match the same button ids)
+  { COMP_LED, 10, 0 },
+  { COMP_LED, 16, 1 },
+  { COMP_LED, 14, 2 },
+  { COMP_LED, 15, 3 },
+  { COMP_LED, 18, 4 },
+
+  // Potentiometers
+  // { COMP_POT, A1, 5 }
+};
+```
+
+### Configurator app
 
 Using the Web-app included in this repo (under `app/`) you can connect to the Pedal via WebSerial connection and customize each button.\
-You can change which Note or CC message to send, and also how the button shoul act:
+Upon connecting, the Web configurator will read the hardware definition of your pedal and adjust it's fields to match yours.
 
-- Like a **momentary** (Press=ON - Release=OFF)
-- Like a **toggle** switch (Press=ON - Press again=OFF)
+You will be able to:
+
+- Load the config stored inside the Arduino
+- Save the config into the Arduino
+- Change which Note or CC MIDI message to send (for button and potentiometers)
+- Set ON and OFF values for buttons (from 0 to 127)
+- Set how each button shoul act:
+  - Like a **Momentary** (Press=ON - Release=OFF)
+  - Like a **Toggle** switch (Press=ON - Press again=OFF)
 
 Every setting will be stored in the Arduino EEPROM memory, even if disconnected.
 
