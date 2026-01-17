@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import clsx from 'clsx';
-import { Settings, Save, Download, Zap, ZapOff, Layers } from 'lucide-react';
+import { Settings, Save, ArrowDownFromLine, Zap, ZapOff, Layers, Trash2 } from 'lucide-react';
 
 import { useWebSerial } from './hooks/useWebSerial';
 
@@ -186,6 +186,23 @@ function App() {
       }
   };
 
+  const handleReset = async () => {
+    if (!confirm("Are you sure you want to factory reset the device? This will erase all your settings.")) return;
+    
+    setIsLoading(true);
+    setStatusMsg("Resetting...");
+    try {
+        await sendCommand("RESET");
+        await new Promise(r => setTimeout(r, 1000)); // Wait for flash
+        setStatusMsg("Device Reset!");
+        await handleLoad();
+    } catch (e) {
+        setStatusMsg("Reset failed: " + e.message);
+    } finally {
+        setIsLoading(false);
+    }
+  };
+
   const updateButton = (globalIndex, field, value) => {
       const newButtons = [...buttons];
       newButtons[globalIndex] = { ...newButtons[globalIndex], [field]: value };
@@ -263,8 +280,11 @@ function App() {
                     Button Mapping
                 </h2>
                 <div className="flex gap-3">
+                    <button onClick={handleReset} disabled={isLoading} className="flex items-center gap-2 bg-red-400 bg-opacity-10 border border-red-400/20 hover:bg-red-400/20 text-red-400 px-4 py-2 rounded-lg transition-colors">
+                        <Trash2 className="w-4 h-4" /> Reset
+                    </button>
                     <button onClick={handleLoad} disabled={isLoading} className="flex items-center gap-2 bg-card border border-gray-700 hover:bg-gray-800 px-4 py-2 rounded-lg text-slate-200 transition-colors">
-                        <Download className="w-4 h-4" /> Load from Pedal
+                        <ArrowDownFromLine className="w-4 h-4" /> Load from Pedal
                     </button>
                     <button onClick={handleSave} disabled={isLoading} className="flex items-center gap-2 bg-primary hover:bg-primary-hover px-4 py-2 rounded-lg text-white transition-colors">
                         <Save className="w-4 h-4" /> Save Changes

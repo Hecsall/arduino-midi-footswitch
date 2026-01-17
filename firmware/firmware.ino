@@ -25,7 +25,7 @@ struct HardwareComponent {
 // Example:
 // 5 Buttons? = 5 Controls
 // 4 Buttons + 2 Potentiometers? = 6 Controls
-const int NUM_CONTROLS = 6; 
+const int NUM_CONTROLS = 5; 
 const int NUM_LAYERS = 3; // L, Center, R
 
 HardwareComponent hardware[] = {
@@ -94,6 +94,7 @@ int ppqn = 0;
 unsigned long beatLedOffTime = 0;
 
 // Forward declarations
+void setDefaults();
 int getCurrentLayer();
 void handleSerial();
 void handleMidi();
@@ -277,6 +278,10 @@ void parseCommand(String cmd) {
   } else if (cmd.equals("SAVE")) {
     saveConfig();
     Serial.println("OK: SAVE");
+  } else if (cmd.equals("RESET")) {
+    setDefaults();
+    saveConfig();
+    Serial.println("OK: RESET");
   } else {
     Serial.println("ERR: Unknown Command");
   }
@@ -435,6 +440,20 @@ void saveConfig() {
   }
 }
 
+void setDefaults() {
+  for (int l = 0; l < NUM_LAYERS; l++) {
+    for (int b = 0; b < NUM_CONTROLS; b++) {
+      controlConfigs[l][b].type = TYPE_NOTE;
+      int baseNote = 60 + (l * 12); 
+      controlConfigs[l][b].value = baseNote + b;
+      controlConfigs[l][b].mode = MODE_MOMENTARY;
+      controlConfigs[l][b].channel = 0;
+      controlConfigs[l][b].minValue = 0;
+      controlConfigs[l][b].maxValue = 127;
+    }
+  }
+}
+
 void loadConfig() {
   int addr = EEPROM_START_ADDR;
   char m1 = EEPROM.read(addr++);
@@ -452,17 +471,6 @@ void loadConfig() {
       }
     }
   } else {
-    // Defaults
-    for (int l = 0; l < NUM_LAYERS; l++) {
-      for (int b = 0; b < NUM_CONTROLS; b++) {
-        controlConfigs[l][b].type = TYPE_NOTE;
-        int baseNote = 60 + (l * 12); 
-        controlConfigs[l][b].value = baseNote + b;
-        controlConfigs[l][b].mode = MODE_MOMENTARY;
-        controlConfigs[l][b].channel = 0;
-        controlConfigs[l][b].minValue = 0;
-        controlConfigs[l][b].maxValue = 127;
-      }
-    }
+    setDefaults();
   }
 }
