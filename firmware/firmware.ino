@@ -65,7 +65,7 @@ const int MODE_TOGGLE = 1;
 const int EEPROM_START_ADDR = 0;
 
 // Header signature. Change to force EEPROM reset when structure changes.
-const char EEPROM_SIG[2] = {'M', 'F'};
+const char EEPROM_SIG[2] = {'M', 'G'};
 
 // Struct for Control Settings
 struct ControlConfig {
@@ -461,9 +461,9 @@ void saveConfig() {
 void setDefaults() {
   for (int l = 0; l < NUM_LAYERS; l++) {
     for (int b = 0; b < MAX_CONTROLS; b++) {
-      controlConfigs[l][b].type = TYPE_NOTE;
-      int baseNote = 60 + (l * 12); 
-      controlConfigs[l][b].value = baseNote + b;
+      controlConfigs[l][b].type = TYPE_CC;
+      int baseVal = 20 + (l * 10); 
+      controlConfigs[l][b].value = baseVal + b;
       controlConfigs[l][b].mode = MODE_MOMENTARY;
       controlConfigs[l][b].channel = 0;
       controlConfigs[l][b].minValue = 0;
