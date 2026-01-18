@@ -1,7 +1,7 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import clsx from 'clsx';
-import { Settings, Save, ArrowDownFromLine, Zap, ZapOff, Layers, Trash2 } from 'lucide-react';
+import { Settings, Save, ArrowDownFromLine, Zap, ZapOff, Layers, Trash2, Upload, Download } from 'lucide-react';
 
 import { useWebSerial } from './hooks/useWebSerial';
 
@@ -86,6 +86,50 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
   const [activeLayer, setActiveLayer] = useState(1); // Default to Center (Layer 1)
+  const fileInputRef = useRef(null);
+
+  const handleExportConfig = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(buttons, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "pedal_config.json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  };
+
+  const handleImportConfig = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const fileReader = new FileReader();
+    fileReader.readAsText(file, "UTF-8");
+    fileReader.onload = e => {
+      try {
+        const importedData = JSON.parse(e.target.result);
+        if (Array.isArray(importedData)) {
+            setButtons(prev => {
+                const newB = [...prev];
+                importedData.forEach(item => {
+                    // Try to match by ID, ensuring we don't break the array structure
+                    const idx = newB.findIndex(b => b.id === item.id);
+                    if (idx !== -1) {
+                         newB[idx] = { ...newB[idx], ...item };
+                    }
+                });
+                return newB;
+            });
+            setStatusMsg("Config imported successfully!");
+        } else {
+             setStatusMsg("Invalid config file format.");
+        }
+      } catch (err) {
+        setStatusMsg("Error parsing config file.");
+      }
+    };
+    // Reset input so same file can be selected again
+    event.target.value = '';
+  };
 
   const handleLoad = async () => {
       setIsLoading(true);
@@ -274,21 +318,37 @@ function App() {
         {/* Configuration Area */}
         <div className={clsx("transition-opacity duration-300 space-y-4", !isConnected && "opacity-50 pointer-events-none")}>
             
-            <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                    <Layers className="w-5 h-5 text-primary" />
-                    Button Mapping
-                </h2>
-                <div className="flex gap-3">
-                    <button onClick={handleReset} disabled={isLoading} className="flex items-center gap-2 bg-red-400 bg-opacity-10 border border-red-400/20 hover:bg-red-400/20 text-red-400 px-4 py-2 rounded-lg transition-colors">
-                        <Trash2 className="w-4 h-4" /> Reset
-                    </button>
-                    <button onClick={handleLoad} disabled={isLoading} className="flex items-center gap-2 bg-card border border-gray-700 hover:bg-gray-800 px-4 py-2 rounded-lg text-slate-200 transition-colors">
-                        <ArrowDownFromLine className="w-4 h-4" /> Load from Pedal
-                    </button>
-                    <button onClick={handleSave} disabled={isLoading} className="flex items-center gap-2 bg-primary hover:bg-primary-hover px-4 py-2 rounded-lg text-white transition-colors">
-                        <Save className="w-4 h-4" /> Save Changes
-                    </button>
+            <div className="flex flex-col gap-4"> 
+                <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-semibold flex items-center gap-2">
+                        <Layers className="w-5 h-5 text-primary" />
+                        Button Mapping
+                    </h2>
+                    <div className="flex gap-2">
+                         <input 
+                            type="file" 
+                            ref={fileInputRef}
+                            style={{ display: 'none' }} 
+                            accept=".json"
+                            onChange={handleImportConfig}
+                        />
+                        <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 bg-card border border-gray-700 hover:bg-gray-800 px-3 py-2 rounded-lg text-slate-200 transition-colors text-xs uppercase font-bold tracking-wider">
+                            <Upload className="w-3 h-3" /> Import
+                        </button>
+                        <button onClick={handleExportConfig} className="flex items-center gap-2 bg-card border border-gray-700 hover:bg-gray-800 px-3 py-2 rounded-lg text-slate-200 transition-colors text-xs uppercase font-bold tracking-wider mr-2">
+                            <Download className="w-3 h-3" /> Export
+                        </button>
+
+                        <button onClick={handleReset} disabled={isLoading} className="flex items-center gap-2 bg-red-400 bg-opacity-10 border border-red-400/20 hover:bg-red-400/20 text-red-400 px-3 py-2 rounded-lg transition-colors text-xs uppercase font-bold tracking-wider">
+                            <Trash2 className="w-3 h-3" /> Reset
+                        </button>
+                        <button onClick={handleLoad} disabled={isLoading} className="flex items-center gap-2 bg-card border border-gray-700 hover:bg-gray-800 px-3 py-2 rounded-lg text-slate-200 transition-colors text-xs uppercase font-bold tracking-wider">
+                            <ArrowDownFromLine className="w-3 h-3" /> Read
+                        </button>
+                        <button onClick={handleSave} disabled={isLoading} className="flex items-center gap-2 bg-primary hover:bg-primary-hover px-3 py-2 rounded-lg text-white transition-colors text-xs uppercase font-bold tracking-wider">
+                            <Save className="w-3 h-3" /> Write
+                        </button>
+                    </div>
                 </div>
             </div>
 
