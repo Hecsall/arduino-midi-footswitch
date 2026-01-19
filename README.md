@@ -74,7 +74,7 @@ All settings are stored in the Arduino’s **EEPROM**, so they persist even afte
 > Live demo: [https://hecsall.github.io/arduino-midi-footswitch/](https://hecsall.github.io/arduino-midi-footswitch/)
 
 <img 
-    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/web-ui.png"
+    src="https://raw.githubusercontent.com/Hecsall/arduino-midi-footswitch/refs/heads/readme-assets/img/web-ui.png"
     alt="Web Configurator"
     width="600">
 
