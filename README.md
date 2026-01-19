@@ -63,6 +63,7 @@ You can:
 
 - Load the configuration stored on the Arduino
 - Save a configuration to the Arduino
+- Import/Export your configuration as JSON
 - Change which **Note** or **CC** MIDI message is sent
 - Set **ON/OFF** values for buttons (0-127)
 - Choose between **Momentary** or **Toggle** button behavior
