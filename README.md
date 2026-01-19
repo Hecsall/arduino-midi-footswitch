@@ -1,45 +1,100 @@
 # Arduino MIDI Footswitch
 
-USB MIDI Pedal built with Arduino, configurable via Web UI!
+A USB MIDI footswitch built with Arduino, configurable via a Web UI
 
->**Disclaimer:**<br>
->Just a heads-up: I’m not a C developer.<br>
->This code came together thanks to a lot of online resources, documentation, trial and error, and modern tools like GitHub Copilot.<br>
->I don’t plan to actively maintain or support this project, but it might still be useful as a small reference for others.<br>
->Hopefully it helps someone out 😄
+> **Disclaimer:**  
+> Just a heads-up: I’m not a C developer.  
+> This project came together thanks to lots of online resources, documentation, trial and error, and modern tools like GitHub Copilot.  
+> I don’t plan to actively maintain or support this project, but it might still be useful as a small reference or starting point for others.  
+> Hopefully it helps someone out 😄
 
-## Usage
+---
 
-This MIDI Footswitch changes his operational mode based on which position the rear switch is on.\
-So you have 3 "layers" of MIDI commands you can send, 5 for each layer.
+## Features
 
-Using the Web-app included in this repo (under `app/`) you can connect to the Pedal via WebSerial connection and customize each button.\
-You can change which Note or CC message to send, and also how the button shoul act:
+### Multiple Layers
 
-- Like a **momentary** (Press=ON - Release=OFF)
-- Like a **toggle** switch (Press=ON - Press again=OFF)
+This MIDI footswitch changes its behavior based on the position of a rear switch.  
+With a 3-way switch, you get **3 different “layers”** of MIDI commands you can send.
 
-Every setting will be stored in the Arduino EEPROM memory, even if disconnected.
+### Modularity
 
-> [!NOTE]
-> See it live at [https://hecsall.github.io/arduino-midi-footswitch/](https://hecsall.github.io/arduino-midi-footswitch/)
+The firmware is designed to let you easily add or remove **Buttons**, **LEDs**, and **Potentiometers** (the latter not fully tested yet) with minimal configuration.
+
+At the top of the `firmware.ino` file, you’ll find the  
+`--- USER HARDWARE DEFINITION --` section:
+
+```c
+// Layers (usually 3 with a 3-way switch)
+const int NUM_LAYERS = 3;
+
+// Format:
+// {hardware_type, arduino_pin, numerical_id}
+HardwareComponent hardware[] = {
+  // Buttons
+  { COMP_BUTTON, 5, 0 },
+  { COMP_BUTTON, 6, 1 },
+  { COMP_BUTTON, 7, 2 },
+  { COMP_BUTTON, 8, 3 },
+  { COMP_BUTTON, 9, 4 },
+
+  // LEDs (not configurable, just match the same button IDs)
+  { COMP_LED, 10, 0 },
+  { COMP_LED, 16, 1 },
+  { COMP_LED, 14, 2 },
+  { COMP_LED, 15, 3 },
+  { COMP_LED, 18, 4 },
+
+  // Potentiometers
+  // { COMP_POT, A1, 5 }
+};
+```
+
+Also, a `MAX_CONTROLS` variable statically sets the maximum number of controls you can have to **20**.\
+This is used to generate a fixed configuration object inside Arduino's memory to avoid filling too much memory and to avoid other issues.
+
+### Configurator App
+
+Using the web app included in this repo (under `app/`), you can connect to the footswitch via **Web Serial** and customize each control.
+
+When connected, the configurator reads your pedal’s hardware definition and automatically adjusts the UI to match it.
+
+You can:
+
+- Load the configuration stored on the Arduino
+- Save a configuration to the Arduino
+- Import/Export your configuration as JSON
+- Change which **Note** or **CC** MIDI message is sent
+- Set **ON/OFF** values for buttons (0-127)
+- Choose between **Momentary** or **Toggle** button behavior
+
+All settings are stored in the Arduino’s **EEPROM**, so they persist even after disconnecting power.
+
+> [!NOTE]  
+> Live demo: [https://hecsall.github.io/arduino-midi-footswitch/](https://hecsall.github.io/arduino-midi-footswitch/)
 
 <img 
-    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/web-ui.png"
+    src="https://raw.githubusercontent.com/Hecsall/arduino-midi-footswitch/refs/heads/readme-assets/img/web-ui.png"
     alt="Web Configurator"
     width="600">
 
+---
+
 ## Running the Web Configurator
 
-See the README.md file inside the `app/` folder.
+See the `README.md` inside the `app/` folder.
 
-## How to build
+---
+
+## How to Build
 
 1. [Materials](#materials)
 2. [Hardware setup](#hardware-setup)
 3. [Software setup](#software-setup)
 4. [Rename the device](#rename-the-device)
 5. [Usage](#usage)
+
+---
 
 ## Materials
 
@@ -87,15 +142,21 @@ See the README.md file inside the `app/` folder.
         alt="USB Panel Mount"
         width="300">
 
-## Hardware setup
+---
 
-Going straight to the point, this footswitch will have:
+## Hardware Setup
 
-- 5 push buttons
-- 5 leds (one for each button), each one with a 10 KΩ 1/2W resistor
-- 1 Switch on the back, to select 3 different button "Layers" (like what the "Shift" key on your PC keyboard does, more or less)
+This build uses:
+- 5 push buttons  
+- 5 LEDs (one per button, each with a 10 kΩ resistor)  
+- 1 rear ON-OFF-ON switch for selecting layers  
 
-Here is how I wired everything up on my SparkFun Pro Micro (click to open the larger image), if you use something different just remember to adjust pin numbers in the code later. (Black is GND, all the other colors are Data pins)
+If you use different pins or a different board, remember to update the pin numbers in the firmware accordingly.
+
+<img 
+    src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/wiring_scheme.png"
+    alt="Arduino MIDI Footswitch Wiring"
+    width="300">
 
 <img 
     src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/wiring_scheme.png"
@@ -116,7 +177,7 @@ Then I put everything in an Aluminium Box with some holes for Buttons, LEDs, the
     alt="Aluminium Box"
     width="300">
 
-Be sure to mask the bottom of the box (if made with metal) to avoid potential shorts, I used some tape.
+⚠️ If your enclosure is metal, insulate the bottom to avoid short circuits.
 
 <img 
     src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/photos/bottom_tape.JPG"
@@ -142,44 +203,46 @@ Connect some wires, put the SparkFun into the enclosure, and you are done with t
     alt="Aluminium Box with buttons"
     width="300">
 
-## Software setup
+---
 
-For the software part I'm assuming you already have Arduino IDE installed (mine is version 2.3.7).<br>
-In the Arduino IDE go to **Sketch > Include Library > Manage Libraries**.<br>
-Search for the **MIDIUSB** library from Arduino, and install the latest version.
+## Software Setup
 
-**Only if you are using a SparkFun Pro Micro as I do**<br>
-you will have to install the board in your Arduino IDE, to do so, follow this link and follow the instructions under "Installing the Arduino Addon"
-https://learn.sparkfun.com/tutorials/pro-micro--fio-v3-hookup-guide/installing-windows#windows_boardaddon
+Assuming you already have the **Arduino IDE** installed:
 
-Ok, now we are ready to upload your code, finally.<br>
-Open the firmware/firmware.ino` file and, if you made changes on pin wiring, be sure to edit the respectve variables according to your wiring.<br>
+1. Open **Sketch → Include Library → Manage Libraries**
+2. _If you are using a SparkFun Pro Micro_:
+  - Install the board in your Arduino IDE following this guide the "Installing the Arduino Addon" section:
+[https://learn.sparkfun.com/tutorials/pro-micro--fio-v3-hookup-guide/installing-windows#windows_boardaddon](https://learn.sparkfun.com/tutorials/pro-micro--fio-v3-hookup-guide/installing-windows#windows_boardaddon)
+3. Install **MIDIUSB** by Arduino
+4. Open `firmware/firmware.ino` and customize pin numbers if changed
+5. Select the correct board and CPU frequency
+6. Upload the firmware
 
-Plug the USB cable from your Arduino/SparkFun to your PC, under Tools select the proper board and, if needed, select the proper CPU (SparkFun Pro Micro comes in 2 versions, 8MHz and 16Mhz, flashing the wrong one will cause the board to "soft brick", and you will need to reset it manually, *learned this the hard way*).<br>
-Now select the proper port and we can upload the code!
-
-If everything is correct, it should be working. When you push a button the relative led should light up. To test the MIDI messages I used a lightweight free software called [MIDI Tools](https://mountainutilities.eu/miditools), or you can directly use your DAW.
+If everything is correct, you should see incoming MIDI messages when pressing buttons, using an app like [MIDI Tools](https://mountainutilities.eu/miditools) or directly using your DAW.
 
 <img 
     src="https://github.com/Hecsall/arduino-midi-footswitch/raw/readme-assets/img/photos/IMG_20181009_235056.jpg"
     alt="Arduino Footswitch"
     width="300">
 
-## Rename the device
+---
 
-This is an optional step. Normally, when you plug your footswitch, it will appear as "SparkFun Pro Micro" (or the name of the board you are using), so I decided to rename it.
-It's a very simple and fast step.
+## Rename the Device (Optional)
 
-Follow the instructions created by nebhead at this link:
-[https://gist.github.com/nebhead/c92da8f1a8b476f7c36c032a0ac2592a](https://gist.github.com/nebhead/c92da8f1a8b476f7c36c032a0ac2592a)
+By default, the board will appear using its stock name (e.g. *SparkFun Pro Micro*).
 
-I'll leave my own board file inside the `other/` folder in this repo as an example.\
-In my case I named my folder `footswitch` and the device name is **MIDI Footswitch**.
+To rename it, follow this guide by **nebhead**:  
+https://gist.github.com/nebhead/c92da8f1a8b476f7c36c032a0ac2592a
 
-After doing everything, restart your Arduino IDE and under Tools > Boards you should find a new "subcategory" with your newly created board inside.
+An example board definition is included in the `other/` folder.
 
-## Useful links
+---
 
-- SparkFun Pro Micro setup for Arduino IDE: https://learn.sparkfun.com/tutorials/pro-micro--fio-v3-hookup-guide/installing-windows#windows_boardaddon
-- MIDIUSB Arduino library: https://www.arduino.cc/en/Reference/MIDIUSB
-- MIDI CC table: https://www.midi.org/specifications-old/item/table-3-control-change-messages-data-bytes-2
+## Useful Links
+
+- SparkFun Pro Micro setup:  
+  [https://learn.sparkfun.com/tutorials/pro-micro--fio-v3-hookup-guide/installing-windows#windows_boardaddon](https://learn.sparkfun.com/tutorials/pro-micro--fio-v3-hookup-guide/installing-windows#windows_boardaddon)
+- MIDIUSB library:  
+  [https://www.arduino.cc/en/Reference/MIDIUSB](https://www.arduino.cc/en/Reference/MIDIUSB)
+- MIDI CC table:  
+  [https://www.midi.org/specifications-old/item/table-3-control-change-messages-data-bytes-2](https://www.midi.org/specifications-old/item/table-3-control-change-messages-data-bytes-2)

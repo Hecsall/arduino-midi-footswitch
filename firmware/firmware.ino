@@ -3,20 +3,50 @@
 
 /*
   MIDI Footswitch Firmware
-
-               /
-  ,--------------,
-  |  O    |    O |
-  |--------------|
-  |  O |  O |  O |
-  `--------------`
 */
 
-// --- Configuration ---
-const int NUM_BUTTONS = 5;
+enum ComponentType {
+  COMP_BUTTON,
+  COMP_LED,
+  COMP_POT
+};
+
+struct HardwareComponent {
+  ComponentType type;
+  int pin;
+  int logicalId; // Maps to Config index (0..NUM_CONTROLS-1)
+};
+
+// --- USER HARDWARE DEFINITION --
 const int NUM_LAYERS = 3; // L, Center, R
-const int BTN_PINS[NUM_BUTTONS] = {5, 6, 7, 8, 9};
-const int LED_PINS[NUM_BUTTONS] = {10, 16, 14, 15, 18};
+
+HardwareComponent hardware[] = {
+  // Buttons
+  { COMP_BUTTON, 5, 0 },
+  { COMP_BUTTON, 6, 1 },
+  { COMP_BUTTON, 7, 2 },
+  { COMP_BUTTON, 8, 3 },
+  { COMP_BUTTON, 9, 4 },
+  
+  // LEDs (not configurable, just match the same button ids)
+  { COMP_LED, 10, 0 },
+  { COMP_LED, 16, 1 },
+  { COMP_LED, 14, 2 },
+  { COMP_LED, 15, 3 },
+  { COMP_LED, 18, 4 },
+
+  // Potentiometers
+  // { COMP_POT, A1, 5 }
+};
+// --- End USER HARDWARE DEFINITION --
+
+// MAX_CONTROLS defines the storage limit and array sizes. 
+// Should be large enough to accommodate mostly any setup
+const int MAX_CONTROLS = 20;
+// numControls will be calculated automatically in setup() based on hardware definitions.
+int numControls = 0; 
+
+const int HW_COUNT = sizeof(hardware) / sizeof(hardware[0]);
 
 // Switch Pins (3-way toggle: ON-OFF-ON)
 // Pos 1: L=GND, R=FLOAT -> Layer 0
@@ -34,39 +64,79 @@ const int MODE_TOGGLE = 1;
 // EEPROM Storage Address
 const int EEPROM_START_ADDR = 0;
 
-// Struct for Button Settings
-struct ButtonConfig {
+// Header signature. Change to force EEPROM reset when structure changes.
+const char EEPROM_SIG[2] = {'M', 'G'};
+
+// Struct for Control Settings
+struct ControlConfig {
   uint8_t type;    // TYPE_NOTE or TYPE_CC
   uint8_t value;   // Note number or CC number
   uint8_t mode;    // MODE_MOMENTARY or MODE_TOGGLE
   uint8_t channel; // MIDI Channel (default 1)
+  uint8_t minValue; // Value for OFF/Release
+  uint8_t maxValue; // Value for ON/Press
 };
 
-// Storage for all layers [Layer][Button]
-ButtonConfig buttonConfigs[NUM_LAYERS][NUM_BUTTONS];
+// Storage for all layers [Layer][Control]
+ControlConfig controlConfigs[NUM_LAYERS][MAX_CONTROLS];
 
 // State tracking
-bool lastButtonState[NUM_BUTTONS] = {HIGH, HIGH, HIGH, HIGH, HIGH}; // HIGH = Released
-bool toggleState[NUM_LAYERS][NUM_BUTTONS]; // Toggle state per layer
-int activeLayer[NUM_BUTTONS]; // Tracks which layer was active when button was pressed
-unsigned long lastDebounceTime[NUM_BUTTONS] = {0};
+bool lastButtonState[MAX_CONTROLS]; // HIGH = Released
+int lastPotValue[MAX_CONTROLS]; // 0-127
+bool toggleState[NUM_LAYERS][MAX_CONTROLS]; // Toggle state per layer
+int activeLayer[MAX_CONTROLS]; // Tracks which layer was active when button was pressed
+unsigned long lastDebounceTime[MAX_CONTROLS];
 // Debounce to prevent accidental excessive button readings.
-// I tried lower than 10 but sometimes triggers fake readings, 10ms seems acceptable.
 unsigned long debounceDelay = 10; 
 int ppqn = 0;
 unsigned long beatLedOffTime = 0;
 
+// Forward declarations
+void setDefaults();
+int getCurrentLayer();
+void handleSerial();
+void handleMidi();
+void readHardware();
+void updateLEDs();
+void parseCommand(String cmd);
+void saveConfig();
+void loadConfig();
+void handlePress(int idx, int layer);
+void handleRelease(int idx, int layer);
+void sendNoteOn(byte channel, byte pitch, byte velocity);
+void sendNoteOff(byte channel, byte pitch, byte velocity);
+void sendCC(byte channel, byte control, byte value);
+
+
 void setup() {
   Serial.begin(115200);
 
-  // Setup Button Pins
-  for (int i = 0; i < NUM_BUTTONS; i++) {
-    pinMode(BTN_PINS[i], INPUT_PULLUP);
-    pinMode(LED_PINS[i], OUTPUT);
-    digitalWrite(LED_PINS[i], LOW);
-    
-    // Init state
-    activeLayer[i] = 1; // Default to center
+  // Auto-detect number of controls based on max logicalId in hardware array
+  int maxLogicalId = -1;
+  for (int i = 0; i < HW_COUNT; i++) {
+    if (hardware[i].logicalId > maxLogicalId) {
+      maxLogicalId = hardware[i].logicalId;
+    }
+  }
+  numControls = maxLogicalId + 1;
+  if (numControls > MAX_CONTROLS) numControls = MAX_CONTROLS; // Safety clamp
+
+  // Init State Arrays
+  for(int i=0; i<MAX_CONTROLS; i++) {
+    lastButtonState[i] = HIGH;
+    lastPotValue[i] = -1;
+    activeLayer[i] = 1; // Default Center
+    lastDebounceTime[i] = 0;
+  }
+
+  // Setup Hardware Pins
+  for (int i = 0; i < HW_COUNT; i++) {
+    if (hardware[i].type == COMP_BUTTON) {
+      pinMode(hardware[i].pin, INPUT_PULLUP);
+    } else if (hardware[i].type == COMP_LED) {
+      pinMode(hardware[i].pin, OUTPUT);
+      digitalWrite(hardware[i].pin, LOW);
+    } 
   }
 
   // Setup Switch Pins
@@ -75,7 +145,7 @@ void setup() {
 
   // Init toggle states
   for (int l = 0; l < NUM_LAYERS; l++) {
-    for (int b = 0; b < NUM_BUTTONS; b++) {
+    for (int b = 0; b < MAX_CONTROLS; b++) {
       toggleState[l][b] = false;
     }
   }
@@ -87,7 +157,7 @@ void setup() {
 void loop() {
   handleSerial();
   handleMidi();
-  readButtons();
+  readHardware();
   updateLEDs();
 }
 
@@ -116,8 +186,6 @@ void handleMidi() {
 }
 
 // --- Serial Command Handling ---
-// CMD index maps to Layer * 5 + ButtonIndex
-// 0-4: Layer 0, 5-9: Layer 1, 10-14: Layer 2
 
 String inputBuffer = "";
 
@@ -137,48 +205,101 @@ void parseCommand(String cmd) {
   cmd.trim();
   if (cmd.length() == 0) return;
 
-  if (cmd.startsWith("SET")) {
+  if (cmd.equals("INFO")) {
+    Serial.print("SYS:LAYERS:");
+    Serial.println(NUM_LAYERS);
+    Serial.print("SYS:CONTROLS:");
+    Serial.println(numControls);
+    
+    // Dump Hardware Layout
+    for (int i = 0; i < numControls; i++) {
+      int type = -1; 
+      for (int h = 0; h < HW_COUNT; h++) {
+        if (hardware[h].logicalId == i) {
+          if (hardware[h].type == COMP_POT) { 
+             type = 1; 
+             break; // Found Pot, wins
+          }
+          if (hardware[h].type == COMP_BUTTON) { 
+             type = 0; 
+          }
+        }
+      }
+      if (type != -1) {
+        Serial.print("SYS:TYPE:");
+        Serial.print(i);
+        Serial.print(":");
+        Serial.println(type == 1 ? "POT" : "BTN");
+      }
+    }
+    
+    Serial.println("OK: INFO");
+  } else if (cmd.startsWith("SET")) {
     int firstSpace = cmd.indexOf(' ');
     int secondSpace = cmd.indexOf(' ', firstSpace + 1);
     int thirdSpace = cmd.indexOf(' ', secondSpace + 1);
     int fourthSpace = cmd.indexOf(' ', thirdSpace + 1);
+    int fifthSpace = cmd.indexOf(' ', fourthSpace + 1);
+    int sixthSpace = cmd.indexOf(' ', fifthSpace + 1);
 
-    if (firstSpace > 0 && secondSpace > 0 && thirdSpace > 0 && fourthSpace > 0) {
+    if (firstSpace > 0 && secondSpace > 0 && thirdSpace > 0 && fourthSpace > 0 && fifthSpace > 0 && sixthSpace > 0) {
       int idx = cmd.substring(firstSpace + 1, secondSpace).toInt();
       int type = cmd.substring(secondSpace + 1, thirdSpace).toInt();
       int val = cmd.substring(thirdSpace + 1, fourthSpace).toInt();
-      int mode = cmd.substring(fourthSpace + 1).toInt();
+      int mode = cmd.substring(fourthSpace + 1, fifthSpace).toInt();
+      int minV = cmd.substring(fifthSpace + 1, sixthSpace).toInt();
+      int maxV = cmd.substring(sixthSpace + 1).toInt();
 
-      int totalButtons = NUM_BUTTONS * NUM_LAYERS;
-      if (idx >= 0 && idx < totalButtons) {
-        int layer = idx / NUM_BUTTONS;
-        int btn = idx % NUM_BUTTONS;
+      int totalItems = MAX_CONTROLS * NUM_LAYERS;
+      // We need to calculate bounds based on what the App sees (numControls * NUM_LAYERS)
+      int validTotal = numControls * NUM_LAYERS;
+
+      if (idx >= 0 && idx < validTotal) {
+        int layer = idx / numControls;
+        int btn = idx % numControls;
         
-        buttonConfigs[layer][btn].type = type;
-        buttonConfigs[layer][btn].value = val;
-        buttonConfigs[layer][btn].mode = mode;
+        controlConfigs[layer][btn].type = type;
+        controlConfigs[layer][btn].value = val;
+        controlConfigs[layer][btn].mode = mode;
+        controlConfigs[layer][btn].minValue = minV;
+        controlConfigs[layer][btn].maxValue = maxV;
         Serial.println("OK: SET " + String(idx));
       }
     }
   } else if (cmd.equals("GET")) {
-    int totalButtons = NUM_BUTTONS * NUM_LAYERS;
-    for (int i = 0; i < totalButtons; i++) {
-      int layer = i / NUM_BUTTONS;
-      int btn = i % NUM_BUTTONS;
+    // Send all stored data (MAX_CONTROLS) so App can see everything if needed, 
+    // or we can limit to numControls. Restoring based on MAX is safer for EEPROM backup.
+    int totalItems = MAX_CONTROLS * NUM_LAYERS;
+    for (int i = 0; i < totalItems; i++) {
+      int layer = i / MAX_CONTROLS;
+      int btn = i % MAX_CONTROLS;
       
+      // Optimization: Only send active ones to speed up
+      if (btn >= numControls) continue;
+
+      int logicalFlatIndex = (layer * numControls) + btn;
+
       Serial.print("BTN:");
-      Serial.print(i);
+      Serial.print(logicalFlatIndex);
       Serial.print(":");
-      Serial.print(buttonConfigs[layer][btn].type);
+      Serial.print(controlConfigs[layer][btn].type);
       Serial.print(":");
-      Serial.print(buttonConfigs[layer][btn].value);
+      Serial.print(controlConfigs[layer][btn].value);
       Serial.print(":");
-      Serial.println(buttonConfigs[layer][btn].mode);
+      Serial.print(controlConfigs[layer][btn].mode);
+      Serial.print(":");
+      Serial.print(controlConfigs[layer][btn].minValue);
+      Serial.print(":");
+      Serial.println(controlConfigs[layer][btn].maxValue);
     }
     Serial.println("OK: GET");
   } else if (cmd.equals("SAVE")) {
     saveConfig();
     Serial.println("OK: SAVE");
+  } else if (cmd.equals("RESET")) {
+    setDefaults();
+    saveConfig();
+    Serial.println("OK: RESET");
   } else {
     Serial.println("ERR: Unknown Command");
   }
@@ -186,86 +307,115 @@ void parseCommand(String cmd) {
 
 // --- Logic ---
 
-void readButtons() {
+void readHardware() {
   int currentLayer = getCurrentLayer();
 
-  for (int i = 0; i < NUM_BUTTONS; i++) {
-    int reading = digitalRead(BTN_PINS[i]);
+  for (int i = 0; i < HW_COUNT; i++) {
+    int idx = hardware[i].logicalId;
+    if (idx < 0 || idx >= numControls) continue;
 
-    if (reading != lastButtonState[i]) {
-      lastDebounceTime[i] = millis();
-    }
-    
-    static int stableState[NUM_BUTTONS] = {HIGH, HIGH, HIGH, HIGH, HIGH};
-
-    if ((millis() - lastDebounceTime[i]) > debounceDelay) {
-      if (reading != stableState[i]) {
-        stableState[i] = reading;
-
-        if (stableState[i] == LOW) {
-           // Pressed: Lock in the current layer for this button
-           activeLayer[i] = currentLayer;
-           handlePress(i, currentLayer);
-        } else {
-           // Released: Use the locked layer
-           handleRelease(i, activeLayer[i]);
+    if (hardware[i].type == COMP_BUTTON) {
+        int reading = digitalRead(hardware[i].pin);
+        
+        if (reading != lastButtonState[idx]) {
+          lastDebounceTime[idx] = millis();
         }
-      }
+        
+        static int stableState[MAX_CONTROLS];
+        static bool initialized = false;
+        if (!initialized) {
+           for(int k=0; k<MAX_CONTROLS; k++) stableState[k] = HIGH;
+           initialized = true;
+        }
+
+        if ((millis() - lastDebounceTime[idx]) > debounceDelay) {
+          if (reading != stableState[idx]) {
+              stableState[idx] = reading;
+
+              if (stableState[idx] == LOW) { // Pressed
+                activeLayer[idx] = currentLayer;
+                handlePress(idx, currentLayer);
+              } else { // Released
+                handleRelease(idx, activeLayer[idx]);
+              }
+          }
+        }
+        lastButtonState[idx] = reading;
+
+    } else if (hardware[i].type == COMP_POT) {
+        int raw = analogRead(hardware[i].pin);
+        int midiVal = raw >> 3; // 0-1023 -> 0-127
+        
+        // Simple hysteresis
+        if (lastPotValue[idx] == -1 || abs(midiVal - lastPotValue[idx]) > 1) { 
+           lastPotValue[idx] = midiVal;
+           ControlConfig cfg = controlConfigs[currentLayer][idx];
+           // Usually Pots are CC.
+           if (cfg.type == TYPE_CC) { 
+              sendCC(cfg.channel, cfg.value, midiVal);
+           } else {
+              // If configured as Note, send Note On with velocity = value
+               if (midiVal > 0) sendNoteOn(cfg.channel, cfg.value, midiVal);
+               else sendNoteOff(cfg.channel, cfg.value, 0);
+           }
+        }
     }
-    
-    lastButtonState[i] = reading;
   }
 }
 
 void handlePress(int idx, int layer) {
-  ButtonConfig cfg = buttonConfigs[layer][idx];
+  ControlConfig cfg = controlConfigs[layer][idx];
   
   if (cfg.mode == MODE_MOMENTARY) {
-    if (cfg.type == TYPE_NOTE) sendNoteOn(0, cfg.value, 127);
-    else sendCC(0, cfg.value, 127);
+    if (cfg.type == TYPE_NOTE) sendNoteOn(0, cfg.value, cfg.maxValue);
+    else sendCC(0, cfg.value, cfg.maxValue);
     
   } else if (cfg.mode == MODE_TOGGLE) {
     toggleState[layer][idx] = !toggleState[layer][idx];
     
     if (toggleState[layer][idx]) {
-       if (cfg.type == TYPE_NOTE) sendNoteOn(0, cfg.value, 127);
-       else sendCC(0, cfg.value, 127);
+       if (cfg.type == TYPE_NOTE) sendNoteOn(0, cfg.value, cfg.maxValue);
+       else sendCC(0, cfg.value, cfg.maxValue);
     } else {
-       if (cfg.type == TYPE_NOTE) sendNoteOff(0, cfg.value, 0);
-       else sendCC(0, cfg.value, 0);
+       if (cfg.type == TYPE_NOTE) sendNoteOff(0, cfg.value, cfg.minValue);
+       else sendCC(0, cfg.value, cfg.minValue);
     }
   }
 }
 
 void handleRelease(int idx, int layer) {
-  ButtonConfig cfg = buttonConfigs[layer][idx];
+  ControlConfig cfg = controlConfigs[layer][idx];
   
   if (cfg.mode == MODE_MOMENTARY) {
-    if (cfg.type == TYPE_NOTE) sendNoteOff(0, cfg.value, 0);
-    else sendCC(0, cfg.value, 0);
+    if (cfg.type == TYPE_NOTE) sendNoteOff(0, cfg.value, cfg.minValue);
+    else sendCC(0, cfg.value, cfg.minValue);
   }
 }
 
 void updateLEDs() {
   int layer = getCurrentLayer();
   
-  for(int i=0; i<NUM_BUTTONS; i++) {
-    bool ledOn = false;
-    ButtonConfig cfg = buttonConfigs[layer][i];
-    
-    if (cfg.mode == MODE_MOMENTARY) {
-        ledOn = (digitalRead(BTN_PINS[i]) == LOW); 
-    } else {
-        // Toggle mode: Light if state is true for CURRENT layer
-        ledOn = toggleState[layer][i];
-    }
+  for (int i = 0; i < HW_COUNT; i++) {
+    if (hardware[i].type == COMP_LED) {
+       int idx = hardware[i].logicalId;
+       if (idx < 0 || idx >= numControls) continue;
+       
+       bool ledOn = false;
+       ControlConfig cfg = controlConfigs[layer][idx];
 
-    // Override first LED for BPM blink
-    if (i == 0 && millis() < beatLedOffTime) {
-        ledOn = true;
-    }
+       if (cfg.mode == MODE_MOMENTARY) {
+           ledOn = (lastButtonState[idx] == LOW);
+       } else {
+           ledOn = toggleState[layer][idx];
+       }
 
-    digitalWrite(LED_PINS[i], ledOn ? HIGH : LOW);
+       // Override first LED (logical 0) for BPM
+       if (idx == 0 && millis() < beatLedOffTime) {
+           ledOn = true;
+       }
+       
+       digitalWrite(hardware[i].pin, ledOn ? HIGH : LOW);
+    }
   }
 }
 
@@ -293,15 +443,31 @@ void sendCC(byte channel, byte control, byte value) {
 
 void saveConfig() {
   int addr = EEPROM_START_ADDR;
-  EEPROM.update(addr++, 'M');
-  EEPROM.update(addr++, 'C');
+  EEPROM.update(addr++, EEPROM_SIG[0]);
+  EEPROM.update(addr++, EEPROM_SIG[1]);
   
   for (int l = 0; l < NUM_LAYERS; l++) {
-    for (int b = 0; b < NUM_BUTTONS; b++) {
-      EEPROM.update(addr++, buttonConfigs[l][b].type);
-      EEPROM.update(addr++, buttonConfigs[l][b].value);
-      EEPROM.update(addr++, buttonConfigs[l][b].mode);
-      EEPROM.update(addr++, buttonConfigs[l][b].channel);
+    for (int b = 0; b < MAX_CONTROLS; b++) {
+      EEPROM.update(addr++, controlConfigs[l][b].type);
+      EEPROM.update(addr++, controlConfigs[l][b].value);
+      EEPROM.update(addr++, controlConfigs[l][b].mode);
+      EEPROM.update(addr++, controlConfigs[l][b].channel);
+      EEPROM.update(addr++, controlConfigs[l][b].minValue);
+      EEPROM.update(addr++, controlConfigs[l][b].maxValue);
+    }
+  }
+}
+
+void setDefaults() {
+  for (int l = 0; l < NUM_LAYERS; l++) {
+    for (int b = 0; b < MAX_CONTROLS; b++) {
+      controlConfigs[l][b].type = TYPE_CC;
+      int baseVal = 20 + (l * 10); 
+      controlConfigs[l][b].value = baseVal + b;
+      controlConfigs[l][b].mode = MODE_MOMENTARY;
+      controlConfigs[l][b].channel = 0;
+      controlConfigs[l][b].minValue = 0;
+      controlConfigs[l][b].maxValue = 127;
     }
   }
 }
@@ -311,25 +477,18 @@ void loadConfig() {
   char m1 = EEPROM.read(addr++);
   char m2 = EEPROM.read(addr++);
   
-  if (m1 == 'M' && m2 == 'C') {
+  if (m1 == EEPROM_SIG[0] && m2 == EEPROM_SIG[1]) {
     for (int l = 0; l < NUM_LAYERS; l++) {
-      for (int b = 0; b < NUM_BUTTONS; b++) {
-        buttonConfigs[l][b].type = EEPROM.read(addr++);
-        buttonConfigs[l][b].value = EEPROM.read(addr++);
-        buttonConfigs[l][b].mode = EEPROM.read(addr++);
-        buttonConfigs[l][b].channel = EEPROM.read(addr++);
+      for (int b = 0; b < MAX_CONTROLS; b++) {
+        controlConfigs[l][b].type = EEPROM.read(addr++);
+        controlConfigs[l][b].value = EEPROM.read(addr++);
+        controlConfigs[l][b].mode = EEPROM.read(addr++);
+        controlConfigs[l][b].channel = EEPROM.read(addr++);
+        controlConfigs[l][b].minValue = EEPROM.read(addr++);
+        controlConfigs[l][b].maxValue = EEPROM.read(addr++);
       }
     }
   } else {
-    // Defaults
-    for (int l = 0; l < NUM_LAYERS; l++) {
-      for (int b = 0; b < NUM_BUTTONS; b++) {
-        buttonConfigs[l][b].type = TYPE_NOTE;
-        int baseNote = 60 + (l * 12); 
-        buttonConfigs[l][b].value = baseNote + b;
-        buttonConfigs[l][b].mode = MODE_MOMENTARY;
-        buttonConfigs[l][b].channel = 0;
-      }
-    }
+    setDefaults();
   }
 }
